@@ -1,6 +1,6 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, Upload, ShieldCheck, Users, History, RotateCcw } from 'lucide-react'
+import { LayoutDashboard, FileText, Upload, ShieldCheck, Users, History, RotateCcw, Moon, Sun } from 'lucide-react'
 
 const links = [
   { path: '/', label: 'Panel', icon: LayoutDashboard },
@@ -14,7 +14,14 @@ const links = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
   const navigate = useNavigate()
+
+  useEffect(() => {
+    const theme = darkMode ? 'dark' : 'light'
+    document.documentElement.dataset.theme = theme
+    localStorage.setItem('theme', theme)
+  }, [darkMode])
 
   return (
     <div className="layout">
@@ -44,7 +51,18 @@ export default function Layout() {
       <div className="content">
         <header className="page-header">
           <h1>{currentLabel()}</h1>
-          <button className="btn btn-icon btn-outline" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menú" />
+          <div className="header-actions">
+            <button className="btn btn-icon btn-outline" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menú" />
+            <button
+              className="btn btn-icon btn-outline theme-toggle"
+              onClick={() => setDarkMode(!darkMode)}
+              aria-label={`Cambiar a modo ${darkMode ? 'claro' : 'oscuro'}`}
+              aria-pressed={darkMode}
+              title={`Cambiar a modo ${darkMode ? 'claro' : 'oscuro'}`}
+            >
+              {darkMode ? <Sun size={18} /> : <Moon size={18} />}
+            </button>
+          </div>
         </header>
         <main>{<Outlet />}</main>
       </div>
@@ -55,7 +73,7 @@ export default function Layout() {
 function currentLabel(): string {
   const p = window.location.pathname
   const found = links.find((l) => p === l.path || p.startsWith(l.path + '/'))
-  return found ? found.label : 'Agente de Facturas'
+  return found ? found.label : 'Página no encontrada'
 }
 
 import { cn } from '../lib/utils'

@@ -8,6 +8,7 @@ import ApprovalCenter from './pages/ApprovalCenter'
 import History from './pages/History'
 import Rules from './pages/Rules'
 import Beneficiaries from './pages/Beneficiaries'
+import PageNotFound from './pages/PageNotFound'
 
 const router = createBrowserRouter([
   {
@@ -22,6 +23,7 @@ const router = createBrowserRouter([
       { path: 'history', element: <History /> },
       { path: 'rules', element: <Rules /> },
       { path: 'beneficiaries', element: <Beneficiaries /> },
+      { path: '*', element: <PageNotFound /> },
     ],
   },
 ])

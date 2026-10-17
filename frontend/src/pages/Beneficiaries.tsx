@@ -35,9 +35,9 @@ export default function Beneficiaries() {
           </thead>
           <tbody>
             {beneficiaries.map((b) => (
-              <tr key={b.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+              <tr key={b.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                 <td style={{ padding: '0.75rem 0', fontWeight: '500' }}>{b.name}</td>
-                <td style={{ padding: '0.75rem 0', fontSize: '0.85rem', color: '#64748b' }}>{b.category || '—'}</td>
+                <td style={{ padding: '0.75rem 0', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{b.category || '—'}</td>
                 <td style={{ padding: '0.75rem 0' }}>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.85rem' }}>
                     {b.allowed ? '●' : '○'} {b.allowed ? 'Permitido' : 'No permitido'}

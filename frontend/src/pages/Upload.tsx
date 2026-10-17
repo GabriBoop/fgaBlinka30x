@@ -55,12 +55,12 @@ export default function Upload() {
           <div className="file-input" onClick={() => inputRef.current?.click()}>
             {file ? (
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', justifyContent: 'center' }}>
-                <File size={24} style={{ color: '#2563eb' }} />
+                <File size={24} style={{ color: 'var(--color-primary)' }} />
                 <span>{file.name}</span>
               </div>
             ) : (
               <>
-                <Image size={32} style={{ color: '#94a3b8' }} />
+                <Image size={32} style={{ color: 'var(--color-text-muted)' }} />
                 <div>Haz clic para seleccionar un archivo</div>
               </>
             )}
@@ -77,7 +77,7 @@ export default function Upload() {
         </div>
       </form>
 
-      <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: '#64748b' }}>
+      <div style={{ marginTop: '1.5rem', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
         <AlertTriangle size={16} /> Los datos son ficticios. La extracción de PDF con texto usa pypdf; las imágenes requieren Tesseract instalado en el servidor.
       </div>
     </div>

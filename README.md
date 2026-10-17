@@ -119,10 +119,10 @@ Documentación interactiva automática del backend: `http://localhost:8000/docs`
 ### Opción A: Backend + PostgreSQL con Docker Compose
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-Levanta PostgreSQL y el backend. La documentación queda en `http://localhost:8000/docs`.
+Levanta PostgreSQL y el backend, y carga los datos ficticios iniciales si aún no existen. La documentación queda en `http://localhost:8000/docs`.
 
 ### Opción B: Backend sin Docker
 

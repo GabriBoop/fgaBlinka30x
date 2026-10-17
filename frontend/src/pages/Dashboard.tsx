@@ -17,7 +17,7 @@ export default function Dashboard() {
       .finally(() => setLoading(false))
   }, [])
 
-  if (loading) return <div className="center-panel"><Loader2 size={32} style={{ color: '#94a3b8' }} /></div>
+  if (loading) return <div className="center-panel"><Loader2 size={32} style={{ color: 'var(--color-text-muted)' }} /></div>
   if (error) return <div className="center-panel"><div className="alert alert-error">{error}</div></div>
 
   return (
@@ -36,21 +36,21 @@ export default function Dashboard() {
         </div>
         <div>
           <div className="metric-label">Aptas para pago simulado</div>
-          <div className="metric-value" style={{ color: '#15803d' }}>{summary?.ELIGIBLE_SIMULATED ?? 0}</div>
+          <div className="metric-value" style={{ color: 'var(--color-success)' }}>{summary?.ELIGIBLE_SIMULATED ?? 0}</div>
         </div>
         <div>
           <div className="metric-label">Frenadas</div>
-          <div className="metric-value" style={{ color: '#dc2626' }}>{summary?.BLOCKED ?? 0}</div>
+          <div className="metric-value" style={{ color: 'var(--color-danger)' }}>{summary?.BLOCKED ?? 0}</div>
         </div>
         <div>
           <div className="metric-label">Requieren aprobación</div>
-          <div className="metric-value" style={{ color: '#b45309' }}>{summary?.NEEDS_HUMAN_APPROVAL ?? 0}</div>
+          <div className="metric-value" style={{ color: 'var(--color-warning)' }}>{summary?.NEEDS_HUMAN_APPROVAL ?? 0}</div>
         </div>
       </div>
 
       <div style={{ marginTop: '1.5rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(260px,1fr))', gap: '1rem' }}>
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#15803d' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-success)' }}>
             <CheckCircle size={24} /> <strong>Presupuesto</strong>
           </div>
           <div className="metric-value" style={{ marginTop: '0.5rem' }}>
@@ -58,7 +58,7 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="card">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: '#64748b' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-text-muted)' }}>
             <Clock size={24} /> <strong>Última actualización</strong>
           </div>
           <div className="metric-value" style={{ marginTop: '0.5rem' }}>{new Date().toLocaleTimeString('es-CO')}</div>
@@ -66,7 +66,7 @@ export default function Dashboard() {
       </div>
 
       <div className="card" style={{ marginTop: '1.5rem' }}>
-        <h2 style={{ fontSize: '1rem', marginBottom: '1rem', color: '#64748b' }}>Acciones rápidas</h2>
+        <h2 style={{ fontSize: '1rem', marginBottom: '1rem', color: 'var(--color-text-muted)' }}>Acciones rápidas</h2>
         <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
           <button className="btn btn-outline" onClick={() => navigate('/invoices')}>
             <FileText size={18} /> Ver facturas
