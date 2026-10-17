@@ -1,15 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
+import { Beneficiary } from '../types'
 import { File, Image, AlertTriangle } from 'lucide-react'
 
 export default function Upload() {
   const navigate = useNavigate()
   const [file, setFile] = useState<File | null>(null)
-  const [companyId, setCompanyId] = useState('')
+  const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([])
+  const [beneficiaryId, setBeneficiaryId] = useState('')
+  const [beneficiariesLoading, setBeneficiariesLoading] = useState(true)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    api.listBeneficiaries()
+      .then((items) => {
+        setBeneficiaries(items)
+        setBeneficiaryId(items[0]?.id ?? '')
+      })
+      .catch((err: unknown) => {
+        setError(err instanceof Error ? err.message : 'No se pudieron cargar los proveedores')
+      })
+      .finally(() => setBeneficiariesLoading(false))
+  }, [])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files?.[0]) setFile(e.target.files[0])
@@ -22,7 +37,12 @@ export default function Upload() {
     setError(null)
     setSuccess(null)
     try {
-      const inv = await api.uploadInvoice(file, companyId)
+      const beneficiary = beneficiaries.find((item) => item.id === beneficiaryId)
+      if (!beneficiary) {
+        setError('Selecciona un proveedor de la lista')
+        return
+      }
+      const inv = await api.uploadInvoice(file, beneficiary.id)
       setSuccess(`Factura ${inv.invoice_number || inv.id} creada (estado: ${inv.status}).`)
       setFile(null)
       setTimeout(() => navigate(`/invoices/${inv.id}`), 1500)
@@ -46,8 +66,30 @@ export default function Upload() {
 
       <form onSubmit={handleSubmit} className="card" style={{ maxWidth: '560px' }}>
         <div className="form-group">
-          <label>Empresa (company_id)</label>
-          <input className="form-control" placeholder="co_demo_001" value={companyId} onChange={(e) => setCompanyId(e.target.value)} required />
+          <label htmlFor="beneficiary">Proveedor</label>
+          <select
+            id="beneficiary"
+            className="form-control"
+            value={beneficiaryId}
+            onChange={(e) => setBeneficiaryId(e.target.value)}
+            disabled={beneficiariesLoading || beneficiaries.length === 0}
+            required
+          >
+            {beneficiariesLoading ? (
+              <option value="">Cargando proveedores...</option>
+            ) : beneficiaries.length === 0 ? (
+              <option value="">No hay proveedores disponibles</option>
+            ) : (
+              beneficiaries.map((beneficiary) => (
+                <option key={beneficiary.id} value={beneficiary.id}>
+                  {beneficiary.name}
+                  {beneficiary.category ? ` · ${beneficiary.category}` : ''}
+                  {beneficiary.reference_code ? ` · ${beneficiary.reference_code}` : ''}
+                  {beneficiary.allowed ? ' · Permitido' : ' · No permitido'}
+                </option>
+              ))
+            )}
+          </select>
         </div>
 
         <div className="form-group" style={{ marginTop: '1rem' }}>
@@ -70,7 +112,7 @@ export default function Upload() {
         </div>
 
         <div style={{ marginTop: '1.5rem', display: 'flex', gap: '0.75rem' }}>
-          <button type="submit" className="btn btn-primary" disabled={loading || !file || !companyId}>
+          <button type="submit" className="btn btn-primary" disabled={loading || beneficiariesLoading || beneficiaries.length === 0 || !file || !beneficiaryId}>
             {loading ? 'Subiendo...' : 'Subir y extraer'}
           </button>
           <button type="button" className="btn btn-outline" onClick={() => navigate('/')}>Cancelar</button>

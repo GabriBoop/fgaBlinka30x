@@ -33,7 +33,7 @@ services:
     command:
       - sh
       - -c
-      - python -m app.services.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000
+      - python -m app.services.migrate && python -m app.services.seed && uvicorn app.main:app --host 0.0.0.0 --port 8000
 
 volumes:
   pgdata_facturas:

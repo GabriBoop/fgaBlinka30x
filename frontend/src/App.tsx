@@ -3,6 +3,7 @@ import Layout from './components/Layout'
 import Dashboard from './pages/Dashboard'
 import Invoices from './pages/Invoices'
 import InvoiceDetail from './pages/InvoiceDetail'
+import InvoiceEdit from './pages/InvoiceEdit'
 import Upload from './pages/Upload'
 import ApprovalCenter from './pages/ApprovalCenter'
 import History from './pages/History'
@@ -18,6 +19,7 @@ const router = createBrowserRouter([
       { index: true, element: <Dashboard /> },
       { path: 'invoices', element: <Invoices /> },
       { path: 'invoices/:id', element: <InvoiceDetail /> },
+      { path: 'invoices/:id/edit', element: <InvoiceEdit /> },
       { path: 'upload', element: <Upload /> },
       { path: 'approvals', element: <ApprovalCenter /> },
       { path: 'history', element: <History /> },

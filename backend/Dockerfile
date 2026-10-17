@@ -12,6 +12,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY backend ./backend
 COPY data-demo ./data-demo
+COPY alembic.ini .
+COPY migrations ./migrations
 
 WORKDIR /app/backend
 

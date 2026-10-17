@@ -3,6 +3,7 @@ from pypdf import PdfWriter
 import io
 
 from conftest import TestingSessionLocal
+from app.models.beneficiary import Beneficiary
 from app.models.company import CompanyDemo
 from app.models.invoice import Invoice
 from app.services.extraction import ExtractionResult
@@ -68,6 +69,62 @@ def test_upload_rejected_extension(client, db_session):
     data = {"company_id": "co_upload_01"}
     r = client.post("/api/v1/invoices/upload", files=files, data=data)
     assert r.status_code == 400, r.text
+
+
+def test_upload_with_beneficiary_sets_company_and_beneficiary(
+    client, db_session, patch_extract
+):
+    _seed_company(db_session)
+    db_session.add(
+        Beneficiary(
+            id="ben_upload_01",
+            company_id="co_upload_01",
+            name="Proveedor de prueba",
+            normalized_name="proveedor de prueba",
+            allowed=True,
+            reference_code="PRO-001",
+            category="Pruebas",
+        )
+    )
+    db_session.commit()
+    files = {"file": ("factura.pdf", _make_pdf_bytes(), "application/pdf")}
+
+    response = client.post(
+        "/api/v1/invoices/upload",
+        files=files,
+        data={"beneficiary_id": "ben_upload_01"},
+    )
+
+    assert response.status_code == 201, response.text
+    assert response.json()["beneficiary_id"] == "ben_upload_01"
+    invoice = db_session.query(Invoice).filter_by(id=response.json()["id"]).one()
+    assert invoice.company_id == "co_upload_01"
+    assert invoice.beneficiary_id == "ben_upload_01"
+
+
+def test_upload_unknown_beneficiary_returns_not_found(client, db_session, patch_extract):
+    files = {"file": ("factura.pdf", _make_pdf_bytes(), "application/pdf")}
+
+    response = client.post(
+        "/api/v1/invoices/upload",
+        files=files,
+        data={"beneficiary_id": "PAP-002"},
+    )
+
+    assert response.status_code == 404, response.text
+    assert response.json()["detail"] == "Proveedor no encontrado"
+    assert db_session.query(Invoice).count() == 0
+
+
+def test_upload_unknown_company_returns_not_found(client, db_session, patch_extract):
+    files = {"file": ("factura.pdf", _make_pdf_bytes(), "application/pdf")}
+    data = {"company_id": "PAP-002"}
+
+    r = client.post("/api/v1/invoices/upload", files=files, data=data)
+
+    assert r.status_code == 404, r.text
+    assert r.json()["detail"] == "Empresa no encontrada"
+    assert db_session.query(Invoice).count() == 0
 
 
 def test_upload_missing_company_id(client, db_session):

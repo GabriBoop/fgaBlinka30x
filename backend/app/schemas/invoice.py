@@ -51,7 +51,12 @@ class InvoiceCreate(InvoiceBase):
 
 
 class InvoiceUpdate(BaseModel):
+    standardize_number: Optional[bool] = False
     status: Optional[str] = None
     beneficiary_id: Optional[str] = None
+    invoice_number: Optional[str] = None
     amount: Optional[Decimal] = None
     currency: Optional[str] = None
+    issue_date: Optional[date] = None
+    due_date: Optional[date] = None
+    description: Optional[str] = None

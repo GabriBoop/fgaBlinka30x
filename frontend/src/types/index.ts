@@ -5,6 +5,8 @@ export type InvoiceOutcome =
   | 'NEEDS_HUMAN_APPROVAL'
   | 'BLOCKED'
   | 'PENDING'
+  | 'APPROVED'
+  | 'REJECTED'
 
 export type InvoiceSource = 'pdf' | 'image' | 'manual' | 'email_text' | 'history'
 
@@ -44,6 +46,17 @@ export interface InvoiceCreate {
   file_hash?: string | null
   extraction_confidence?: number | null
   raw_text?: string | null
+}
+
+export interface InvoiceUpdate {
+  standardize_number?: boolean
+  beneficiary_id?: string | null
+  invoice_number?: string | null
+  amount?: number | null
+  currency?: string | null
+  issue_date?: string | null
+  due_date?: string | null
+  description?: string | null
 }
 
 export interface Beneficiary {

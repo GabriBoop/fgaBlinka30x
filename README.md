@@ -13,7 +13,7 @@ Aplicación web completa con backend (FastAPI + SQLAlchemy + Alembic + PostgreSQ
 - **Fase 2:** CRUD de políticas, beneficiarios y facturas.
 - **Fase 3:** motor determinista de reglas (R1–R7), endpoint `/evaluate`, registro de decisiones (`decision_record`) y control de presupuesto (`budget_reservation`).
 - **Fase 4:** ingesta de documentos — `POST /invoices/upload` (PDF/imagen → texto con pypdf u OCR) y `POST /invoices/{id}/extract`.
-- **Fase 5:** interfaz web — panel, tabla de facturas, detalle con motivos por regla, carga de facturas, centro de aprobaciones, historial y reglas/políticas.
+- **Fase 5:** interfaz web — panel, tabla de facturas, detalle con motivos por regla, carga de facturas, centro de aprobaciones, historial y reglas/políticas. La estandarización manual de números asigna códigos secuenciales `A000`–`A999`, `B000`–`B999` y así sucesivamente hasta `Z999`.
 
 ## Estructura del repositorio
 
@@ -107,7 +107,7 @@ fgaBlinka30x/
 | POST | `/api/v1/invoices` | Crear factura (entrada manual) |
 | GET | `/api/v1/invoices/{id}` | Obtener una factura |
 | PATCH | `/api/v1/invoices/{id}` | Actualizar factura (corregir campos extraídos) |
-| POST | `/api/v1/invoices/upload` | Subir PDF/imagen, extraer texto y crear factura `PENDING` (Fase 4) |
+| POST | `/api/v1/invoices/upload` | Subir PDF/imagen, extraer texto y crear factura `PENDING`; acepta `beneficiary_id` para asociar el proveedor y resolver su empresa (Fase 4) |
 | POST | `/api/v1/invoices/{id}/extract` | Re-ejecutar extracción sobre el archivo ya subido (Fase 4) |
 | POST | `/api/v1/invoices/{id}/evaluate` | Aplicar reglas y registrar decisión (sin ejecutar pagos) (Fase 3) |
 | GET | `/api/v1/invoices/{id}/decisions` | Historial de decisiones de una factura (Fase 3) |
@@ -129,33 +129,51 @@ Levanta PostgreSQL y el backend, y carga los datos ficticios iniciales si aún n
 ```bash
 cd backend
 pip install -r requirements.txt
-# Configurar DATABASE_URL (por defecto apunta a localhost:5432/facturas_demo)
+# Iniciar PostgreSQL desde otra terminal: docker compose up -d postgres
+# Configurar DATABASE_URL si no se usan los valores locales por defecto.
+alembic -c ../alembic.ini upgrade head
+python -m app.services.seed
 uvicorn app.main:app --reload
-```
-
-Luego ejecutar las migraciones:
-
-```bash
-alembic upgrade head
-```
-
-Y cargar los datos ficticios de la Fase 1:
-
-```bash
-PYTHONPATH=backend python -m app.services.seed
 ```
 
 ### Frontend (Fase 5)
 
-El frontend se sirve en `http://localhost:5173` y hace proxy de `/api` al backend en `:8000`.
+El frontend se sirve en `http://localhost:5173` y hace proxy de `/api` al backend en `http://localhost:8000`. `npm run dev` solo inicia Vite; no inicia FastAPI ni PostgreSQL. Si el backend no está levantado, la interfaz puede abrir, pero las pantallas que consultan datos mostrarán errores o contenido vacío.
+
+La forma recomendada de iniciar todo es ejecutar desde la raíz del repositorio:
+
+```bash
+docker compose up -d --build
+```
+
+Este comando aplica las migraciones pendientes, conserva las tablas de una base de datos de una versión anterior, inicia FastAPI y carga los datos ficticios. Verifica que la API esté lista en `http://localhost:8000/health` (debe responder `{"status":"ok"}`) y abre la documentación en `http://localhost:8000/docs`. Después, en otra terminal:
 
 ```bash
 cd frontend
 npm install
-npm run dev        # desarrollo con recarga caliente
-# o para producción:
-npm run build      # genera dist/
-npm run preview    # sirve la build
+npm run dev        # desarrollo con recarga caliente; abrir http://localhost:5173
+```
+
+En Windows PowerShell también se puede comprobar el estado con `docker compose ps`; deben aparecer los servicios `postgres` y `backend` activos. Si solo aparece `postgres`, el frontend no tendrá una API disponible. Los errores de conexión de base de datos ahora detienen el arranque de FastAPI y se muestran en la terminal del backend, en lugar de dejar un servicio iniciado pero incapaz de responder a las consultas.
+
+Para detener los servicios Docker:
+
+```bash
+docker compose down
+```
+
+Para iniciar solamente el frontend (por ejemplo, si el backend ya está ejecutándose por separado):
+
+```bash
+cd frontend
+npm run dev
+```
+
+Para producción, desde `frontend`:
+
+```bash
+npm run build
+npm run preview
 ```
 
 ## Ejecutar pruebas

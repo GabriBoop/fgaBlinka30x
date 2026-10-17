@@ -26,7 +26,7 @@ export default function Layout() {
   return (
     <div className="layout">
       <aside className="sidebar">
-        <div className="logo">Orquídea Andina</div>
+        <div className="logo">TrustFlow</div>
         <nav className="nav">
           {links.map((l) => {
             const Icon = l.icon
