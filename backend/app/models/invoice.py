@@ -19,6 +19,7 @@ class Invoice(Base):
     source_type: Mapped[str] = mapped_column(String, nullable=False)
     file_name: Mapped[str] = mapped_column(String, nullable=True)
     file_hash: Mapped[str] = mapped_column(String, nullable=True)
+    file_path: Mapped[str] = mapped_column(String, nullable=True)
     extraction_confidence: Mapped[float] = mapped_column(nullable=True)
     raw_text: Mapped[str] = mapped_column(Text, nullable=True)
     extracted: Mapped[dict | None] = mapped_column(JSON, nullable=True)

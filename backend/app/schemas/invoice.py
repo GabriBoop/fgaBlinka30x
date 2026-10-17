@@ -15,6 +15,7 @@ class InvoiceBase(BaseModel):
     source_type: str
     file_name: Optional[str] = None
     file_hash: Optional[str] = None
+    file_path: Optional[str] = None
     extraction_confidence: Optional[float] = None
     raw_text: Optional[str] = None
     extracted: Optional[Any] = None
@@ -26,6 +27,20 @@ class InvoiceOut(InvoiceBase):
     status: str
     created_at: datetime | None = None
     extracted: Optional[Any] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InvoiceUploadOut(InvoiceBase):
+    id: str
+    company_id: str
+    status: str
+    created_at: datetime | None = None
+    raw_text: Optional[str] = None
+    file_path: Optional[str] = None
+    extraction_confidence: Optional[float] = None
+    ocr_available: bool = False
+    ocr_warning: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 

@@ -7,3 +7,8 @@ pydantic-settings==2.4.0
 python-dotenv==1.0.1
 pytest==8.3.3
 httpx==0.27.2
+pypdf==6.21.0
+Pillow==11.1.0
+python-multipart==0.0.9
+# OCR: instalar tesseract en el sistema y descomentar la siguiente línea si se usa OCR real
+# pytesseract==0.3.10
