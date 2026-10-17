@@ -30,6 +30,18 @@ app.dependency_overrides[get_db] = _override_get_db
 
 
 @pytest.fixture()
+def db_session():
+    db = TestingSessionLocal()
+    for table in reversed(Base.metadata.sorted_tables):
+        db.execute(table.delete())
+    db.commit()
+    try:
+        yield db
+    finally:
+        db.close()
+
+
+@pytest.fixture()
 def client():
     with TestClient(app) as c:
         yield c

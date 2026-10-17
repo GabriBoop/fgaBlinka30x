@@ -1,4 +1,4 @@
-from sqlalchemy import String, DateTime, Numeric, Date, ForeignKey, func, Text
+from sqlalchemy import String, DateTime, Numeric, Date, ForeignKey, func, Text, JSON
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.database import Base
@@ -21,6 +21,7 @@ class Invoice(Base):
     file_hash: Mapped[str] = mapped_column(String, nullable=True)
     extraction_confidence: Mapped[float] = mapped_column(nullable=True)
     raw_text: Mapped[str] = mapped_column(Text, nullable=True)
+    extracted: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     status: Mapped[str] = mapped_column(String, default="PENDING")
     created_at: Mapped[DateTime] = mapped_column(DateTime, server_default=func.now())
 

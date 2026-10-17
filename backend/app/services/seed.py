@@ -26,6 +26,7 @@ def seed(db):
         Beneficiary,
         Agreement,
         Invoice,
+        BudgetReservation,
     )
 
     c = CompanyDemo(
@@ -103,9 +104,20 @@ def seed(db):
                 status=h["status"],
             )
         )
+        if h.get("reserves_budget"):
+            db.add(
+                BudgetReservation(
+                    id=f"res_{h['id']}",
+                    invoice_id=h["id"],
+                    period_key=h["issue_date"][:7],
+                    amount=float(Decimal(h["amount"])),
+                    currency=h["currency"],
+                    status="reserved",
+                )
+            )
 
     db.commit()
-    print("Seed completado: empresa, política v1, beneficiarios, acuerdos y facturas históricas.")
+    print("Seed completado: empresa, política v1, beneficiarios, acuerdos, facturas históricas y reservas de presupuesto.")
 
 
 if __name__ == "__main__":

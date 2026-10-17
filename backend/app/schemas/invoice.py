@@ -1,7 +1,7 @@
 from pydantic import BaseModel, ConfigDict
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Optional
+from typing import Optional, Any
 
 
 class InvoiceBase(BaseModel):
@@ -17,6 +17,7 @@ class InvoiceBase(BaseModel):
     file_hash: Optional[str] = None
     extraction_confidence: Optional[float] = None
     raw_text: Optional[str] = None
+    extracted: Optional[Any] = None
 
 
 class InvoiceOut(InvoiceBase):
@@ -24,6 +25,7 @@ class InvoiceOut(InvoiceBase):
     company_id: str
     status: str
     created_at: datetime | None = None
+    extracted: Optional[Any] = None
 
     model_config = ConfigDict(from_attributes=True)
 
