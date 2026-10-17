@@ -1,0 +1,72 @@
+{
+  "_nota": "Datos 100% ficticios. Importes como texto decimal (en la base de datos serán NUMERIC).",
+  "company": {
+    "id": "co_demo_001",
+    "name": "Orquídea Andina S.A.S. (empresa ficticia)",
+    "currency_base": "USD"
+  },
+  "policy": {
+    "version": 1,
+    "active": true,
+    "currency": "USD",
+    "max_invoice_amount": "5000.00",
+    "approval_threshold": "1000.00",
+    "period_budget": "12000.00",
+    "period_type": "monthly",
+    "period_basis": "issue_date",
+    "amount_tolerance_pct": "0",
+    "min_extraction_confidence": 0.80,
+    "name_similarity_threshold": 0.85,
+    "possible_duplicate_date_window_days": 0,
+    "rule_actions": {
+      "MISSING_REQUIRED_FIELDS": "NEEDS_HUMAN_APPROVAL",
+      "INVALID_FIELD": "NEEDS_HUMAN_APPROVAL",
+      "LOW_EXTRACTION_CONFIDENCE": "NEEDS_HUMAN_APPROVAL",
+      "DUPLICATE_CONFIRMED": "BLOCKED",
+      "POSSIBLE_DUPLICATE": "NEEDS_HUMAN_APPROVAL",
+      "BENEFICIARY_NOT_ALLOWED": "BLOCKED",
+      "BENEFICIARY_UNKNOWN": "BLOCKED",
+      "BENEFICIARY_NAME_AMBIGUOUS": "NEEDS_HUMAN_APPROVAL",
+      "CURRENCY_MISMATCH": "NEEDS_HUMAN_APPROVAL",
+      "AGREEMENT_EXPIRED": "NEEDS_HUMAN_APPROVAL",
+      "AGREEMENT_AMOUNT_MISMATCH": "NEEDS_HUMAN_APPROVAL",
+      "ABOVE_MAX_INVOICE": "BLOCKED",
+      "BUDGET_EXCEEDED": "BLOCKED",
+      "ABOVE_APPROVAL_THRESHOLD": "NEEDS_HUMAN_APPROVAL"
+    }
+  },
+  "beneficiaries": [
+    {"id": "ben_001", "name": "Suministros Andinos Ltda", "normalized_name": "suministros andinos ltda", "allowed": true, "category": "Insumos de oficina", "reference_code": "SUM-001"},
+    {"id": "ben_002", "name": "Papelería El Faro S.A.S.", "normalized_name": "papeleria el faro sas", "allowed": true, "category": "Insumos de oficina", "reference_code": "PAP-002"},
+    {"id": "ben_003", "name": "Tecnoservicios Caribe S.A.S.", "normalized_name": "tecnoservicios caribe sas", "allowed": true, "category": "Tecnología", "reference_code": "TEC-003"},
+    {"id": "ben_004", "name": "Limpieza Total Bogotá S.A.S.", "normalized_name": "limpieza total bogota sas", "allowed": true, "category": "Servicios generales", "reference_code": "LIM-004"},
+    {"id": "ben_005", "name": "Transportes Rápidos del Sur S.A.S.", "normalized_name": "transportes rapidos del sur sas", "allowed": true, "category": "Logística", "reference_code": "TRA-005"},
+    {"id": "ben_006", "name": "Consultoría Delta & Asociados S.A.S.", "normalized_name": "consultoria delta asociados sas", "allowed": true, "category": "Consultoría", "reference_code": "CON-006"},
+    {"id": "ben_007", "name": "Mantenimiento Pacífico S.A.S.", "normalized_name": "mantenimiento pacifico sas", "allowed": true, "category": "Mantenimiento", "reference_code": "MAN-007"},
+    {"id": "ben_008", "name": "Eventos Horizonte S.A.S.", "normalized_name": "eventos horizonte sas", "allowed": false, "category": "Eventos", "reference_code": "EVE-008"}
+  ],
+  "agreements": [
+    {"id": "agr_001", "beneficiary_id": "ben_001", "description": "Suministro mensual de insumos de oficina", "expected_amount": "800.00", "currency": "USD", "valid_from": "2026-01-01", "valid_to": "2026-12-31"},
+    {"id": "agr_002", "beneficiary_id": "ben_002", "description": "Papelería y útiles", "expected_amount": "350.00", "currency": "USD", "valid_from": "2026-01-01", "valid_to": "2026-12-31"},
+    {"id": "agr_003", "beneficiary_id": "ben_003", "description": "Soporte técnico mensual", "expected_amount": "1450.00", "currency": "USD", "valid_from": "2026-01-01", "valid_to": "2026-12-31"},
+    {"id": "agr_004", "beneficiary_id": "ben_004", "description": "Servicio de limpieza mensual", "expected_amount": "600.00", "currency": "USD", "valid_from": "2026-01-01", "valid_to": "2026-12-31"},
+    {"id": "agr_005", "beneficiary_id": "ben_005", "description": "Transporte de mercancía", "expected_amount": "2400.00", "currency": "USD", "valid_from": "2026-01-01", "valid_to": "2026-12-31"},
+    {"id": "agr_006", "beneficiary_id": "ben_006", "description": "Consultoría de procesos", "expected_amount": "5500.00", "currency": "USD", "valid_from": "2026-01-01", "valid_to": "2026-12-31"},
+    {"id": "agr_007", "beneficiary_id": "ben_007", "description": "Mantenimiento de equipos (vencido el 30 de septiembre)", "expected_amount": "700.00", "currency": "USD", "valid_from": "2026-01-01", "valid_to": "2026-09-30"}
+  ],
+  "history_invoices": [
+    {"id": "HIST-01", "beneficiary_id": "ben_001", "invoice_number": "SA-2026-0412", "amount": "800.00", "currency": "USD", "issue_date": "2026-09-03", "file_hash": "sha256:demo-hist-01", "status": "ELIGIBLE_SIMULATED", "reserves_budget": true},
+    {"id": "HIST-02", "beneficiary_id": "ben_003", "invoice_number": "TC-8841", "amount": "1450.00", "currency": "USD", "issue_date": "2026-09-02", "file_hash": "sha256:demo-hist-02", "status": "HUMAN_APPROVED", "reserves_budget": true},
+    {"id": "HIST-03", "beneficiary_id": "ben_002", "invoice_number": "PE-5530", "amount": "350.00", "currency": "USD", "issue_date": "2026-09-10", "file_hash": "sha256:demo-hist-03", "status": "ELIGIBLE_SIMULATED", "reserves_budget": true}
+  ],
+  "opening_reservations_undetailed": {
+    "_nota": "Reservas previas de otras facturas no listadas. Total reservado por periodo = esto + HIST-xx del periodo.",
+    "2026-08": "11700.00",
+    "2026-09": "8200.00"
+  },
+  "expected_opening_state": {
+    "2026-08": {"reserved": "11700.00", "remaining": "300.00"},
+    "2026-09": {"reserved": "10800.00", "remaining": "1200.00"},
+    "2026-10": {"reserved": "0.00", "remaining": "12000.00"}
+  }
+}
