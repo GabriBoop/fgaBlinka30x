@@ -18,12 +18,8 @@ export default function ApprovalCenter() {
     const reason = prompt(`Justificación para ${action === 'approve' ? 'aprobar' : 'rechazar'} (obligatorio):`)
     if (!reason) return
     try {
-      await fetch(`/api/v1/invoices/${id}/review`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, reason, reviewer_demo_id: 'demo_user' }),
-      })
-      setInvoices(invoices.filter((i) => i.id !== id))
+      await api.reviewInvoice(id, action, reason)
+      setInvoices((current) => current.filter((i) => i.id !== id))
     } catch (e: any) {
       setError(e.detail || 'Error registrando la acción')
     }

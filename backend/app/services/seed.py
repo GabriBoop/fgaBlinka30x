@@ -19,15 +19,17 @@ def seed(db):
     company = cfg["company"]
     pol = cfg["policy"]
 
-    from app.models import (
-        CompanyDemo,
-        PaymentPolicy,
-        RuleAction,
-        Beneficiary,
-        Agreement,
-        Invoice,
-        BudgetReservation,
-    )
+    from app.models.agreement import Agreement
+    from app.models.beneficiary import Beneficiary
+    from app.models.budget_reservation import BudgetReservation
+    from app.models.company import CompanyDemo
+    from app.models.invoice import Invoice
+    from app.models.policy import PaymentPolicy
+    from app.models.rule_action import RuleAction
+
+    if db.query(CompanyDemo).filter(CompanyDemo.id == company["id"]).first():
+        print("Seed ya aplicado: se conservan los datos existentes.")
+        return
 
     c = CompanyDemo(
         id=company["id"],

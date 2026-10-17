@@ -5,11 +5,7 @@ from app.database import engine, Base
 import app.models  # registra todos los modelos en Base.metadata
 from app.api.v1.router import api_router
 
-try:
-    Base.metadata.create_all(bind=engine)
-except Exception:
-    # En desarrollo las tablas se crean con Alembic; esto solo es una conveniencia.
-    pass
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Agente Inteligente de Gestión de Facturas",

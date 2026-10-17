@@ -23,7 +23,7 @@ export default function History() {
       </div>
 
       <div className="card">
-        <p style={{ fontSize: '0.9rem', color: '#64748b' }}>
+        <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
           Cada decisión queda registrada con la versión de la política aplicada y los motivos. Una reevaluación añade un nuevo registro sin sobrescribir el original.
         </p>
       </div>
@@ -43,7 +43,7 @@ export default function History() {
             </thead>
             <tbody>
               {invoices.map((inv) => (
-                <tr key={inv.id} style={{ borderBottom: '1px solid #f1f5f9' }}>
+                <tr key={inv.id} style={{ borderBottom: '1px solid var(--color-border)' }}>
                   <td style={{ padding: '0.75rem 0' }}>{inv.invoice_number || inv.id}</td>
                   <td style={{ padding: '0.75rem 0' }}>
                     <span className={`badge ${outcomeClass(inv.status)}`}>{outcomeLabel(inv.status)}</span>

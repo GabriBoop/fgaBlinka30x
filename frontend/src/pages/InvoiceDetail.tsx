@@ -58,34 +58,34 @@ export default function InvoiceDetail() {
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(280px,1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
         <div className="card">
-          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Estado</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Estado</div>
           <span className={`badge ${outcomeClass(invoice.status)}`} style={{ display: 'block', marginTop: '0.25rem' }}>{outcomeLabel(invoice.status)}</span>
         </div>
         <div className="card">
-          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Importe</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Importe</div>
           <div style={{ marginTop: '0.25rem', fontSize: '1.1rem', fontWeight: '600' }}>{formatCurrency(invoice.amount, invoice.currency)}</div>
         </div>
         <div className="card">
-          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Moneda</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Moneda</div>
           <div style={{ marginTop: '0.25rem' }}>{invoice.currency || '—'}</div>
         </div>
         <div className="card">
-          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Emisión</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Emisión</div>
           <div style={{ marginTop: '0.25rem' }}>{formatDate(invoice.issue_date)}</div>
         </div>
         <div className="card">
-          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Vencimiento</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Vencimiento</div>
           <div style={{ marginTop: '0.25rem' }}>{formatDate(invoice.due_date)}</div>
         </div>
         <div className="card">
-          <div style={{ color: '#64748b', fontSize: '0.85rem' }}>Origen</div>
+          <div style={{ color: 'var(--color-text-muted)', fontSize: '0.85rem' }}>Origen</div>
           <div style={{ marginTop: '0.25rem' }}>{invoice.source_type}</div>
         </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(300px,1fr))', gap: '1rem' }}>
         <div className="card">
-          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: '#64748b' }}>Campos extraídos</h3>
+          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: 'var(--color-text-muted)' }}>Campos extraídos</h3>
           <div style={{ display: 'grid', gap: '0.5rem' }}>
             {[
               { label: 'Beneficiario', value: invoice.extracted?.beneficiary_name || invoice.beneficiary_id || '—' },
@@ -97,22 +97,22 @@ export default function InvoiceDetail() {
               { label: 'Concepto', value: invoice.description || invoice.extracted?.description || '—' },
               { label: 'Confianza', value: invoice.extraction_confidence != null ? `${(invoice.extraction_confidence * 100).toFixed(0)}%` : '—' },
             ].map((f) => (
-              <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.4rem', borderBottom: '1px solid #f1f5f9' }}>
-                <span style={{ fontSize: '0.85rem', color: '#64748b' }}>{f.label}</span>
+              <div key={f.label} style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '0.4rem', borderBottom: '1px solid var(--color-border)' }}>
+                <span style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>{f.label}</span>
                 <span style={{ fontSize: '0.85rem', fontWeight: '500' }}>{f.value}</span>
               </div>
             ))}
           </div>
           {invoice.raw_text && (
             <div style={{ marginTop: '1rem' }}>
-              <h4 style={{ fontSize: '0.85rem', color: '#64748b', marginBottom: '0.4rem' }}>Texto de origen</h4>
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '6px', padding: '0.75rem', fontSize: '0.8rem', fontFamily: 'monospace', overflow: 'auto', maxHeight: '200px' }}>{invoice.raw_text}</div>
+              <h4 style={{ fontSize: '0.85rem', color: 'var(--color-text-muted)', marginBottom: '0.4rem' }}>Texto de origen</h4>
+              <div style={{ background: 'var(--color-bg)', border: '1px solid var(--color-border)', borderRadius: '6px', padding: '0.75rem', fontSize: '0.8rem', fontFamily: 'monospace', overflow: 'auto', maxHeight: '200px' }}>{invoice.raw_text}</div>
             </div>
           )}
         </div>
 
         <div className="card">
-          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: '#64748b' }}>Decisiones</h3>
+          <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: 'var(--color-text-muted)' }}>Decisiones</h3>
           {decisions.length === 0 ? (
             <div className="empty-state" style={{ padding: '1rem' }}>Sin decisiones registradas.</div>
           ) : (
@@ -121,9 +121,9 @@ export default function InvoiceDetail() {
                 <div key={d.id} className={`decision-box decision-${d.outcome.toLowerCase()}`}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.3rem' }}>
                     <span className={`badge ${outcomeClass(d.outcome)}`}>{outcomeLabel(d.outcome)}</span>
-                    <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>{new Date(d.created_at).toLocaleString('es-CO')}</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>{new Date(d.created_at).toLocaleString('es-CO')}</span>
                   </div>
-                  <div style={{ fontSize: '0.85rem', color: '#334155' }}>{d.explanation || 'Sin explicación.'}</div>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--color-text)' }}>{d.explanation || 'Sin explicación.'}</div>
                   {d.reason_codes && d.reason_codes.length > 0 && (
                     <div style={{ marginTop: '0.4rem', display: 'flex', gap: '0.3rem', flexWrap: 'wrap' }}>
                       {d.reason_codes.map((c: string) => (

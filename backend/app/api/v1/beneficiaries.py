@@ -13,7 +13,7 @@ def list_beneficiaries(company_id: str | None = None, db: Session = Depends(get_
     query = db.query(Beneficiary)
     if company_id:
         query = query.filter(Beneficiary.company_id == company_id)
-    return query.all()
+    return query.order_by(Beneficiary.name).all()
 
 
 @router.post("/", response_model=BeneficiaryOut, status_code=201, tags=["beneficiaries"])

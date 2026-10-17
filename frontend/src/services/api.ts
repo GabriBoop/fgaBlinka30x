@@ -1,4 +1,4 @@
-import { Invoice, InvoiceCreate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome } from '../types/index'
+import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome } from '../types/index'
 
 const API_BASE = '/api/v1'
 
@@ -66,15 +66,15 @@ export const api = {
     body: JSON.stringify(body),
   }),
   getInvoice: (id: string) => request<Invoice>(`/invoices/${id}`),
-  updateInvoice: (id: string, body: Partial<InvoiceCreate>) => request<Invoice>(`/invoices/${id}`, {
+  updateInvoice: (id: string, body: InvoiceUpdate) => request<Invoice>(`/invoices/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(body),
   }),
 
-  uploadInvoice: async (file: File, companyId: string): Promise<Invoice> => {
+  uploadInvoice: async (file: File, beneficiaryId: string): Promise<Invoice> => {
     const form = new FormData()
     form.append('file', file)
-    form.append('company_id', companyId)
+    form.append('beneficiary_id', beneficiaryId)
     const res = await fetch(`${API_BASE}/invoices/upload`, { method: 'POST', body: form })
     if (!res.ok) {
       let detail = res.statusText
@@ -102,6 +102,10 @@ export const api = {
     decision_id: string
   }>(`/invoices/${id}/evaluate`, { method: 'POST' }),
   listDecisions: (id: string) => request<DecisionRecord[]>(`/invoices/${id}/decisions`),
+  reviewInvoice: (id: string, action: 'approve' | 'reject', reason: string) => request<{ invoice_id: string; status: InvoiceOutcome }>(`/invoices/${id}/review`, {
+    method: 'POST',
+    body: JSON.stringify({ action, reason, reviewer_demo_id: 'demo_user' }),
+  }),
 
   dashboardSummary: (companyId?: string) => {
     const qs = companyId ? `?company_id=${encodeURIComponent(companyId)}` : ''

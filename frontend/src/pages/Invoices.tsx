@@ -24,7 +24,7 @@ export default function Invoices() {
 
       <div className="card" style={{ marginBottom: '1rem' }}>
         <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <Search size={18} style={{ color: '#94a3b8' }} />
+          <Search size={18} style={{ color: 'var(--color-text-muted)' }} />
           <select
             className="form-control"
             style={{ width: '200px' }}
