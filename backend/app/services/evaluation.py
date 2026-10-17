@@ -17,8 +17,7 @@ from app.rules.engine import evaluate
 def _reservations_by_period(db: Session, company_id: str):
     rows = (
         db.query(BudgetReservation.period_key, func.sum(BudgetReservation.amount))
-        .join(Invoice, BudgetReservation.invoice_id == Invoice.id)
-        .filter(Invoice.company_id == company_id)
+        .filter(BudgetReservation.company_id == company_id)
         .group_by(BudgetReservation.period_key)
         .all()
     )
@@ -86,6 +85,7 @@ def evaluate_and_record(db: Session, invoice_id: str):
                 BudgetReservation(
                     id=str(uuid.uuid4()),
                     invoice_id=invoice.id,
+                    company_id=invoice.company_id,
                     period_key=period,
                     amount=float(Decimal(str(invoice.amount))),
                     currency=invoice.currency,

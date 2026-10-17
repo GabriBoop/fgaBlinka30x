@@ -7,24 +7,24 @@ Prototipo web con un agente que recibe facturas simuladas, extrae sus datos, las
 
 Datos 100% ficticios. No ejecuta pagos reales.
 
-## Estado actual — Fase 4 completada
+## Estado actual — Fase 5 completada
 
-Backend con base de datos PostgreSQL (SQLAlchemy + Alembic), modelos de datos, esquemas Pydantic y API REST con FastAPI.
+Aplicación web completa con backend (FastAPI + SQLAlchemy + Alembic + PostgreSQL) y frontend (React + TypeScript + Vite).
 - **Fase 2:** CRUD de políticas, beneficiarios y facturas.
 - **Fase 3:** motor determinista de reglas (R1–R7), endpoint `/evaluate`, registro de decisiones (`decision_record`) y control de presupuesto (`budget_reservation`).
-- **Fase 4:** ingesta de documentos — `POST /invoices/upload` (PDF/imagen → texto con pypdf u OCR) y `POST /invoices/{id}/extract` (re-extracción), con creación de factura en `PENDING` para corrección humana de campos antes de evaluar.
+- **Fase 4:** ingesta de documentos — `POST /invoices/upload` (PDF/imagen → texto con pypdf u OCR) y `POST /invoices/{id}/extract`.
+- **Fase 5:** interfaz web — panel, tabla de facturas, detalle con motivos por regla, carga de facturas, centro de aprobaciones, historial y reglas/políticas.
 
 ## Estructura del repositorio
 
 ```text
 fgaBlinka30x/
-├── backend/
+├── backend/              # API FastAPI (Fases 2-4)
 │   ├── Dockerfile
 │   ├── requirements.txt
 │   ├── app/
-│   │   ├── __init__.py
-│   │   ├── main.py              # App FastAPI
-│   │   ├── database.py          # Engine, sesión y Base de SQLAlchemy
+│   │   ├── main.py              # App FastAPI + /health
+│   │   ├── database.py          # SQLAlchemy engine, sesión y Base
 │   │   ├── api/
 │   │   │   ├── deps.py
 │   │   │   └── v1/
@@ -34,12 +34,12 @@ fgaBlinka30x/
 │   │   │       ├── invoices.py          # CRUD de facturas
 │   │   │       ├── evaluate.py          # /evaluate y /decisions (Fase 3)
 │   │   │       └── upload.py            # /upload y /extract (Fase 4)
-│   │   ├── models/              # Modelos SQLAlchemy (todas las entidades del plan)
-│   │   ├── schemas/             # Esquemas Pydantic (validación de entrada/salida)
+│   │   ├── models/              # Modelos SQLAlchemy (todas las entidades)
+│   │   ├── schemas/             # Esquemas Pydantic
 │   │   ├── rules/               # Motor determinista de reglas (Fase 3)
 │   │   ├── services/
 │   │   │   ├── seed.py          # Carga de datos ficticios (Fase 1)
-│   │   │   ├── evaluation.py    # Ejecutar motor y persistir decisión + reserva (Fase 3)
+│   │   │   ├── evaluation.py    # Motor + persistir decisión y reserva (Fase 3)
 │   │   │   ├── extraction.py    # Extracción de texto de PDF/imagen (Fase 4)
 │   │   │   └── ocr.py           # OCR con Tesseract (opcional, Fase 4)
 │   │   └── tests/
@@ -48,6 +48,29 @@ fgaBlinka30x/
 │   │       ├── test_evaluate.py
 │   │       ├── test_rules.py
 │   │       └── test_upload.py
+├── frontend/             # Interfaz web React + TypeScript + Vite (Fase 5)
+│   ├── package.json
+│   ├── vite.config.ts
+│   ├── tsconfig.json
+│   ├── index.html
+│   ├── src/
+│   │   ├── main.tsx
+│   │   ├── App.tsx              # Enrutamiento React Router
+│   │   ├── index.css            # Estilos (Tailwind-like)
+│   │   ├── lib/utils.ts         # Formateo y helpers de UI
+│   │   ├── types/index.ts       # Tipos compartidos con la API
+│   │   ├── services/api.ts      # Cliente de la API (fetch)
+│   │   ├── components/Layout.tsx
+│   │   ├── pages/
+│   │   │   ├── Dashboard.tsx
+│   │   │   ├── Invoices.tsx
+│   │   │   ├── InvoiceDetail.tsx
+│   │   │   ├── Upload.tsx
+│   │   │   ├── ApprovalCenter.tsx
+│   │   │   ├── History.tsx
+│   │   │   ├── Rules.tsx
+│   │   │   └── Beneficiaries.tsx
+│   └── dist/                    # Build de producción
 ├── data-demo/                 # Dataset y reglas de la Fase 1
 │   ├── demo-config.json
 │   ├── expected-results.json
@@ -89,11 +112,11 @@ fgaBlinka30x/
 | POST | `/api/v1/invoices/{id}/evaluate` | Aplicar reglas y registrar decisión (sin ejecutar pagos) (Fase 3) |
 | GET | `/api/v1/invoices/{id}/decisions` | Historial de decisiones de una factura (Fase 3) |
 
-Documentación interactiva automática: `http://localhost:8000/docs` (una vez levantado el backend).
+Documentación interactiva automática del backend: `http://localhost:8000/docs` (una vez levantado el backend).
 
 ## Cómo levantar el entorno
 
-### Con Docker Compose (recomendado)
+### Opción A: Backend + PostgreSQL con Docker Compose
 
 ```bash
 docker compose up -d
@@ -101,7 +124,7 @@ docker compose up -d
 
 Levanta PostgreSQL y el backend. La documentación queda en `http://localhost:8000/docs`.
 
-### Sin Docker
+### Opción B: Backend sin Docker
 
 ```bash
 cd backend
@@ -122,6 +145,19 @@ Y cargar los datos ficticios de la Fase 1:
 PYTHONPATH=backend python -m app.services.seed
 ```
 
+### Frontend (Fase 5)
+
+El frontend se sirve en `http://localhost:5173` y hace proxy de `/api` al backend en `:8000`.
+
+```bash
+cd frontend
+npm install
+npm run dev        # desarrollo con recarga caliente
+# o para producción:
+npm run build      # genera dist/
+npm run preview    # sirve la build
+```
+
 ## Ejecutar pruebas
 
 ```bash
@@ -130,11 +166,29 @@ pip install -r requirements.txt
 pytest -q
 ```
 
-Las pruebas usan SQLite en memoria y cubren CRUD de beneficiarios, políticas y facturas.
+Las pruebas usan SQLite en memoria y cubren CRUD (fase 2), motor de reglas contra el dataset de 26 facturas (fase 3), ingesta de documentos (fase 4) y seguridad/demostración (fase 6): **17 pruebas pasando**.
 
-## Próximos pasos (Fase 3)
+## Fase 6 — Seguridad, pruebas y demostración
 
-Implementar el motor determinista de reglas (R1-R7), el endpoint `/evaluate` y el registro de decisiones (`decision_record`), siguiendo el orden de evaluación y la precedencia definidos en `docs/catalogo-reglas.md`.
+Criterios de aceptación verificados:
+
+| Criterio | Estado | Prueba |
+|----------|--------|--------|
+| Dataset 26/26 consistente vs expected-results.json | ✅ | `test_rules.py::test_motor_contra_dataset_26` |
+| Dos facturas simultáneas nunca ambas aptas (presupuesto) | ✅ | `test_phase6.py::test_concurrencia_presupuesto` |
+| Reevaluación: nueva decisión sin duplicar factura/reserva | ✅ | `test_phase6.py::test_reevaluacion_no_duplica_historial` |
+| Sin rutas de pago en la API | ✅ | `test_phase6.py::test_no_rutas_pago` |
+| Datos 100% ficticios | ✅ | `test_phase6.py::test_datos_ficticios` |
+| Aprobaciones humanas registradas sin reescribir historial | ✅ | `test_phase6.py::test_reevaluacion_no_duplica_historial` |
+
+Ejecutar la demostración repetible de la Fase 6:
+
+```bash
+chmod +x demo_phase6.sh
+./demo_phase6.sh
+```
+
+La aplicación es utilizable de principio a fin (salida de la Fase 5 y verificación de la Fase 6). El reto queda listo para demostrar con datos ficticios: cargar facturas, evaluarlas con el motor determinista, revisar decisiones y aprobar/rechazar en el centro de aprobaciones.
 
 ## Licencia
 

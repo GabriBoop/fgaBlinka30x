@@ -109,6 +109,7 @@ def seed(db):
                 BudgetReservation(
                     id=f"res_{h['id']}",
                     invoice_id=h["id"],
+                    company_id=company["id"],
                     period_key=h["issue_date"][:7],
                     amount=float(Decimal(h["amount"])),
                     currency=h["currency"],

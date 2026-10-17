@@ -113,7 +113,7 @@ def upgrade() -> None:
     op.create_table(
         "budget_reservation",
         sa.Column("id", sa.String(), nullable=False),
-        sa.Column("invoice_id", sa.String(), nullable=False),
+        sa.Column("invoice_id", sa.String(), nullable=True),
         sa.Column("period_key", sa.String(), nullable=False),
         sa.Column("amount", sa.Numeric(asdecimal=False), nullable=False),
         sa.Column("currency", sa.String(), nullable=False),
