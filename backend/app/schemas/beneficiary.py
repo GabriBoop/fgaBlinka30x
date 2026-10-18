@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class BeneficiaryBase(BaseModel):
@@ -19,3 +19,10 @@ class BeneficiaryOut(BeneficiaryBase):
 class BeneficiaryCreate(BeneficiaryBase):
     id: str
     company_id: str
+
+
+class BeneficiaryUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=255)
+    allowed: bool | None = None
+    reference_code: str | None = None
+    category: str | None = None

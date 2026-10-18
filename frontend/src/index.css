@@ -522,6 +522,51 @@ tr:hover { background: var(--color-surface-hover); }
 .upload-selected-file { display: flex; align-items: center; justify-content: center; gap: 0.75rem; overflow-wrap: anywhere; }
 .upload-selected-file svg { color: var(--color-primary); flex: 0 0 auto; }
 .upload-form-actions { display: flex; gap: 0.75rem; margin-top: 1.5rem; }
+.beneficiaries-page-header { align-items: flex-start; gap: 1rem; }
+.beneficiary-management-actions, .beneficiary-dialog-actions, .beneficiary-row-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+.beneficiaries-table-card { overflow-x: auto; }
+.beneficiaries-table-card table { min-width: 680px; }
+.beneficiaries-table-card tbody tr { border-bottom: 1px solid var(--color-border); }
+.beneficiaries-table-card th, .beneficiaries-table-card td { padding: 0.75rem; text-align: left; }
+.beneficiaries-table-card th:first-child, .beneficiaries-table-card td:first-child { padding-left: 0; }
+.beneficiary-row-selected { background: var(--color-surface-hover); }
+.beneficiary-status { font-size: 0.85rem; }
+.beneficiary-reference { font-family: monospace; font-size: 0.85rem; }
+.beneficiary-row-actions { flex-wrap: nowrap; }
+.beneficiary-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(15 23 42 / 0.55);
+}
+.beneficiary-dialog {
+  width: min(100%, 480px);
+  max-height: min(90vh, 720px);
+  overflow: auto;
+  padding: 1.25rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  box-shadow: var(--shadow);
+}
+.beneficiary-dialog-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.beneficiary-dialog-heading h2 { font-size: 1.1rem; }
+.beneficiary-allowed-option { display: flex; align-items: center; gap: 0.5rem; font-size: 0.9rem; }
+.beneficiary-dialog-actions { margin-top: 1rem; }
 .upload-note { display: flex; align-items: center; gap: 0.5rem; margin-top: 1.5rem; color: var(--color-text-muted); font-size: 0.85rem; }
 .visually-hidden {
   position: absolute;
@@ -553,6 +598,10 @@ tr:hover { background: var(--color-surface-hover); }
   .upload-mode-options { grid-template-columns: 1fr; }
   .upload-form-heading { flex-direction: column; }
   .upload-form-actions { flex-wrap: wrap; }
+  .beneficiaries-page-header { flex-direction: column; }
+  .beneficiary-management-actions { width: 100%; }
+  .beneficiary-management-actions .btn { flex: 1; justify-content: center; }
+  .beneficiary-row-actions { flex-wrap: wrap; }
   .layout { flex-direction: column; }
   .sidebar { width: 100%; height: auto; position: static; border-right: none; border-bottom: 1px solid var(--color-border); }
   .sidebar.collapsed { width: 100%; padding-inline: 1rem; }

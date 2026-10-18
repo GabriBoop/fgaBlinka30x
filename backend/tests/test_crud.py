@@ -37,6 +37,36 @@ def test_create_duplicate_beneficiary_fails(client):
     assert response.status_code == 400
 
 
+def test_update_beneficiary_updates_name_and_normalized_name(client, db_session):
+    payload = {
+        "id": "ben_update_01",
+        "company_id": "co_demo_001",
+        "name": "Proveedor Original",
+        "normalized_name": "proveedor original",
+    }
+    created = client.post("/api/v1/beneficiaries", json=payload)
+    assert created.status_code == 201
+
+    response = client.patch(
+        "/api/v1/beneficiaries/ben_update_01",
+        json={"name": "  Proveedor Pacífico S.A.S.  ", "category": "Servicios"},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["name"] == "Proveedor Pacífico S.A.S."
+    assert response.json()["normalized_name"] == "proveedor pacifico sas"
+    assert response.json()["category"] == "Servicios"
+
+
+def test_update_missing_beneficiary_returns_not_found(client, db_session):
+    response = client.patch(
+        "/api/v1/beneficiaries/no-existe",
+        json={"name": "Proveedor"},
+    )
+
+    assert response.status_code == 404
+
+
 def test_create_policy(client, db_session):
     from app.models.company import CompanyDemo
     from app.models.policy_change_reason import PolicyChangeReason

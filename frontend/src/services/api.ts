@@ -1,7 +1,7 @@
-import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome, BudgetUpdate, RuleCatalogItem, PolicyMutation, ApiValidationIssue } from '../types/index'
+import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, BeneficiaryUpdate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome, BudgetUpdate, RuleCatalogItem, PolicyMutation, ApiValidationIssue } from '../types/index'
 
 const API_BASE = '/api/v1'
-const DEMO_COMPANY_ID = 'co_demo_001'
+export const DEMO_COMPANY_ID = 'co_demo_001'
 
 export class ApiError extends Error {
   status: number
@@ -113,6 +113,10 @@ export const api = {
   },
   createBeneficiary: (body: BeneficiaryCreate) => request<Beneficiary>('/beneficiaries', {
     method: 'POST',
+    body: JSON.stringify(body),
+  }),
+  updateBeneficiary: (id: string, body: BeneficiaryUpdate) => request<Beneficiary>(`/beneficiaries/${encodeURIComponent(id)}`, {
+    method: 'PATCH',
     body: JSON.stringify(body),
   }),
 

@@ -94,6 +94,13 @@ export interface BeneficiaryCreate {
   category?: string | null
 }
 
+export interface BeneficiaryUpdate {
+  name?: string
+  allowed?: boolean
+  reference_code?: string | null
+  category?: string | null
+}
+
 export interface PolicyRuleAction {
   code: string
   action: RuleActionName

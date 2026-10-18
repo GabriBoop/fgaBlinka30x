@@ -350,6 +350,7 @@ export default function Upload() {
         <AlertTriangle size={16} aria-hidden="true" />
         <span>Los datos son ficticios. Las facturas con campos incompletos requieren revisión.</span>
       </div>
+
     </div>
   )
 }

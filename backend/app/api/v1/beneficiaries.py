@@ -3,7 +3,8 @@ from sqlalchemy.orm import Session
 
 from app.database import get_db
 from app.models.beneficiary import Beneficiary
-from app.schemas.beneficiary import BeneficiaryOut, BeneficiaryCreate
+from app.rules.normalization import norm_name
+from app.schemas.beneficiary import BeneficiaryOut, BeneficiaryCreate, BeneficiaryUpdate
 
 router = APIRouter()
 
@@ -27,6 +28,32 @@ def create_beneficiary(payload: BeneficiaryCreate, db: Session = Depends(get_db)
         raise HTTPException(status_code=400, detail="El beneficiario ya existe")
     beneficiary = Beneficiary(**payload.model_dump())
     db.add(beneficiary)
+    db.commit()
+    db.refresh(beneficiary)
+    return beneficiary
+
+
+@router.patch("/{beneficiary_id}", response_model=BeneficiaryOut, tags=["beneficiaries"])
+def update_beneficiary(
+    beneficiary_id: str,
+    payload: BeneficiaryUpdate,
+    db: Session = Depends(get_db),
+):
+    beneficiary = db.query(Beneficiary).filter(Beneficiary.id == beneficiary_id).first()
+    if not beneficiary:
+        raise HTTPException(status_code=404, detail="Beneficiario no encontrado")
+
+    update_values = payload.model_dump(exclude_unset=True)
+    if "name" in update_values and update_values["name"] is not None:
+        name = update_values["name"].strip()
+        if not name:
+            raise HTTPException(status_code=422, detail="El nombre no puede estar vacío")
+        beneficiary.name = name
+        beneficiary.normalized_name = norm_name(name)
+    for field in ("allowed", "reference_code", "category"):
+        if field in update_values:
+            setattr(beneficiary, field, update_values[field])
+
     db.commit()
     db.refresh(beneficiary)
     return beneficiary
