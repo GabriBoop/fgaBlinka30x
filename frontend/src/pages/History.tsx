@@ -18,10 +18,6 @@ export default function History() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Historial de decisiones</h1>
-      </div>
-
       <div className="card">
         <p style={{ fontSize: '0.9rem', color: 'var(--color-text-muted)' }}>
           Cada decisión queda registrada con la versión de la política aplicada y los motivos. Una reevaluación añade un nuevo registro sin sobrescribir el original.

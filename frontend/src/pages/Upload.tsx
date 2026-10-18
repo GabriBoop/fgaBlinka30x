@@ -57,10 +57,6 @@ export default function Upload() {
 
   return (
     <div className="page center-panel">
-      <div className="page-header">
-        <h1>Cargar factura</h1>
-      </div>
-
       {error && <div className="alert alert-error">{error}</div>}
       {success && <div className="alert alert-success">{success}</div>}
 

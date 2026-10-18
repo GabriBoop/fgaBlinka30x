@@ -1,4 +1,4 @@
-import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome } from '../types/index'
+import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome, BudgetUpdate } from '../types/index'
 
 const API_BASE = '/api/v1'
 
@@ -38,6 +38,10 @@ export const api = {
   getPolicy: () => request<PaymentPolicy>('/policy'),
   createPolicy: (body: PaymentPolicy) => request<PaymentPolicy>('/policy', {
     method: 'PUT',
+    body: JSON.stringify(body),
+  }),
+  updateBudget: (body: BudgetUpdate) => request<PaymentPolicy>('/policy/budget', {
+    method: 'PATCH',
     body: JSON.stringify(body),
   }),
   activatePolicy: (policyId: string) => request<{ policy_id: string; active: boolean }>('/policy/activate', {

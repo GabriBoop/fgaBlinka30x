@@ -38,3 +38,7 @@ class PolicyCreate(PaymentPolicyBase):
 
 class PolicyActivate(BaseModel):
     policy_id: str
+
+
+class BudgetUpdate(BaseModel):
+    period_budget: Decimal

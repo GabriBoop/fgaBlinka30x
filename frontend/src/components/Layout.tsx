@@ -49,7 +49,7 @@ export default function Layout() {
         </nav>
       </aside>
       <div className="content">
-        <header className="page-header">
+        <header className="app-navbar">
           <h1>{currentLabel()}</h1>
           <div className="header-actions">
             <button className="btn btn-icon btn-outline" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Menú" />

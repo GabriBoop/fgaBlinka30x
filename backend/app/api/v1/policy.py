@@ -5,7 +5,7 @@ from app.database import get_db
 from app.models.policy import PaymentPolicy
 from app.models.rule_action import RuleAction
 from app.models.company import CompanyDemo
-from app.schemas.policy import PaymentPolicyOut, PolicyCreate, PolicyActivate
+from app.schemas.policy import BudgetUpdate, PaymentPolicyOut, PolicyCreate, PolicyActivate
 
 router = APIRouter()
 
@@ -68,3 +68,18 @@ def activate_policy(payload: PolicyActivate, db: Session = Depends(get_db)):
     policy.active = True
     db.commit()
     return {"policy_id": policy.id, "active": True}
+
+
+@router.patch("/budget", response_model=PaymentPolicyOut, tags=["policy"])
+def update_active_budget(payload: BudgetUpdate, db: Session = Depends(get_db)):
+    if payload.period_budget < 0:
+        raise HTTPException(status_code=422, detail="El presupuesto no puede ser negativo")
+
+    policy = db.query(PaymentPolicy).filter(PaymentPolicy.active.is_(True)).first()
+    if not policy:
+        raise HTTPException(status_code=404, detail="No hay política activa")
+
+    policy.period_budget = float(payload.period_budget)
+    db.commit()
+    db.refresh(policy)
+    return policy

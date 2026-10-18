@@ -97,6 +97,29 @@ input, select, textarea { font: inherit; }
   margin-bottom: 1.5rem;
 }
 
+.app-navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 3.5rem;
+  margin: -1.5rem -2rem 0;
+  padding: 0.75rem 2rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.app-navbar h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.page-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1.5rem;
+}
+
 .page-header h1 {
   font-size: 1.5rem;
   font-weight: 700;
@@ -299,4 +322,5 @@ tr:hover { background: var(--color-surface-hover); }
   .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--color-border); }
   .nav { flex-direction: row; overflow-x: auto; padding-bottom: 1rem; }
   .content { padding: 1rem; }
+  .app-navbar { margin: -1rem -1rem 0; padding: 0.75rem 1rem; }
 }

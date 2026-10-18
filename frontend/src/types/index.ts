@@ -124,6 +124,10 @@ export interface DashboardSummary {
   budget_total: number
 }
 
+export interface BudgetUpdate {
+  period_budget: number
+}
+
 export interface ApiError {
   detail: string
 }

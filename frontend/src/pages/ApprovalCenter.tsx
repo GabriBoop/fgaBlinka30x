@@ -30,10 +30,6 @@ export default function ApprovalCenter() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Centro de aprobaciones</h1>
-      </div>
-
       {invoices.length === 0 ? (
         <div className="center-panel"><div className="empty-state">No hay facturas pendientes de aprobación humana.</div></div>
       ) : (

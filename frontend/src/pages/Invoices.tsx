@@ -15,8 +15,7 @@ export default function Invoices() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Facturas</h1>
+      <div className="page-actions">
         <Link to="/upload" className="btn btn-primary">
           <Plus size={18} /> Cargar factura
         </Link>

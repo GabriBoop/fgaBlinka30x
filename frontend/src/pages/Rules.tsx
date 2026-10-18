@@ -19,10 +19,6 @@ export default function Rules() {
 
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>Reglas y políticas</h1>
-      </div>
-
       <div className="card" style={{ maxWidth: '700px' }}>
         <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: 'var(--color-text-muted)' }}>Política activa v{policy?.version}</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1rem' }}>
