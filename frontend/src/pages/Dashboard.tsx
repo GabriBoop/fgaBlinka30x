@@ -50,6 +50,8 @@ export default function Dashboard() {
   if (loading) return <div className="center-panel"><Loader2 size={32} style={{ color: 'var(--color-text-muted)' }} /></div>
   if (error) return <div className="center-panel"><div className="alert alert-error">{error}</div></div>
 
+  const budgetExceeded = (summary?.budget_consumed ?? 0) > (summary?.budget_total ?? 0)
+
   return (
     <div className="page">
       <div className="page-actions">
@@ -85,7 +87,7 @@ export default function Dashboard() {
             </div>
             {!editingBudget && <button className="btn btn-sm btn-outline" onClick={startBudgetEdit}><Pencil size={15} /> Editar</button>}
           </div>
-          <div className="metric-value" style={{ marginTop: '0.5rem', display: editingBudget ? 'none' : undefined }}>
+          <div className={budgetExceeded ? 'metric-value budget-amount-exceeded' : 'metric-value'} style={{ marginTop: '0.5rem', display: editingBudget ? 'none' : undefined }}>
             {summary?.budget_consumed != null ? formatCurrency(summary.budget_consumed) : '—'} / {summary?.budget_total != null ? formatCurrency(summary.budget_total) : '—'}
           </div>
           {editingBudget && (
@@ -99,6 +101,7 @@ export default function Dashboard() {
               {budgetError && <div className="field-hint" style={{ color: 'var(--color-danger)' }}>{budgetError}</div>}
             </form>
           )}
+          {budgetExceeded && <div className="budget-exceeded-alert">Tu presupuesto ha sido sobrepasado!!!</div>}
         </div>
         <div className="card">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', color: 'var(--color-text-muted)' }}>

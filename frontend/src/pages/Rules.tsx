@@ -1,64 +1,184 @@
-import { useEffect, useState } from 'react'
-import { api } from '../services/api'
-import { Loader2, ShieldCheck } from 'lucide-react'
+import { useCallback, useEffect, useState } from 'react'
+import { Loader2, Plus, ShieldCheck } from 'lucide-react'
+import { api, ApiError } from '../services/api'
+import { PaymentPolicy, PolicyDraft, PolicyMutation, RuleCatalogItem } from '../types'
+import PolicyParams from '../components/rules/PolicyParams'
+import PolicyActionsMatrix from '../components/rules/PolicyActionsMatrix'
+import PolicyEditor from '../components/rules/PolicyEditor'
+import PolicyVersionsTable from '../components/rules/PolicyVersionsTable'
+
+const TEST_USER_STORAGE_KEY = 'rules-test-user'
+
+function draftFromPolicy(source: PaymentPolicy, version: number, catalog: RuleCatalogItem[]): PolicyDraft {
+  const configuredActions = new Map(source.rule_actions.map(({ code, action }) => [code, action]))
+  return {
+    version,
+    currency: source.currency,
+    max_invoice_amount: String(source.max_invoice_amount),
+    approval_threshold: String(source.approval_threshold),
+    period_budget: String(source.period_budget),
+    period_type: source.period_type,
+    period_basis: source.period_basis,
+    amount_tolerance_pct: String(source.amount_tolerance_pct),
+    min_extraction_confidence: String(source.min_extraction_confidence),
+    name_similarity_threshold: String(source.name_similarity_threshold),
+    possible_duplicate_date_window_days: String(source.possible_duplicate_date_window_days),
+    rule_actions: catalog.map((item) => ({
+      code: item.code,
+      action: configuredActions.get(item.code) ?? item.default_action,
+    })),
+    change_reason: '',
+    activate: true,
+  }
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof ApiError ? error.detail : error instanceof Error ? error.message : 'Ocurrió un error inesperado.'
+}
 
 export default function Rules() {
-  const [policy, setPolicy] = useState<any>(null)
+  const [policy, setPolicy] = useState<PaymentPolicy | null>(null)
+  const [catalog, setCatalog] = useState<RuleCatalogItem[]>([])
+  const [versions, setVersions] = useState<PaymentPolicy[]>([])
+  const [draftSource, setDraftSource] = useState<PaymentPolicy | null>(null)
+  const [draft, setDraft] = useState<PolicyDraft | null>(null)
+  const [testUser, setTestUser] = useState(() => localStorage.getItem(TEST_USER_STORAGE_KEY) ?? '')
   const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const canEdit = testUser.length > 0
 
-  useEffect(() => {
-    api.getPolicy()
-      .then(setPolicy)
-      .catch(() => setError('No se pudo cargar la política'))
-      .finally(() => setLoading(false))
+  const refresh = useCallback(async () => {
+    const [activePolicy, ruleCatalog, policyVersions] = await Promise.all([
+      api.getPolicy(),
+      api.getPolicyCatalog(),
+      api.listPolicyVersions(),
+    ])
+    setPolicy(activePolicy)
+    setCatalog(ruleCatalog)
+    setVersions(policyVersions.sort((left, right) => right.version - left.version))
   }, [])
 
-  if (loading) return <div className="center-panel"><Loader2 size={32} /></div>
-  if (error) return <div className="center-panel"><div className="alert alert-error">{error}</div></div>
+  useEffect(() => {
+    refresh()
+      .catch((err: unknown) => setError(errorMessage(err)))
+      .finally(() => setLoading(false))
+  }, [refresh])
+
+  const selectTestUser = (value: string) => {
+    setTestUser(value)
+    if (value) localStorage.setItem(TEST_USER_STORAGE_KEY, value)
+    else localStorage.removeItem(TEST_USER_STORAGE_KEY)
+  }
+
+  const startDraft = (source: PaymentPolicy) => {
+    const nextVersion = Math.max(0, ...versions.map(({ version }) => version)) + 1
+    setDraftSource(source)
+    setDraft(draftFromPolicy(source, nextVersion, catalog))
+    setError(null)
+    setNotice(null)
+  }
+
+  const closeDraft = () => {
+    setDraftSource(null)
+    setDraft(null)
+    setError(null)
+  }
+
+  const saveDraft = async (payload: PolicyMutation) => {
+    setSaving(true)
+    setError(null)
+    setNotice(null)
+    try {
+      const created = await api.createPolicy(payload)
+      setNotice(`Se creó la versión v${created.version}${payload.activate ? ' y quedó activa' : ''}.`)
+      closeDraft()
+      try {
+        await refresh()
+      } catch (refreshError: unknown) {
+        setNotice(`Se creó la versión v${created.version}${payload.activate ? ' y quedó activa' : ''}, pero no se pudo actualizar la pantalla: ${errorMessage(refreshError)} Recarga antes de crear otra versión.`)
+      }
+    } catch (err: unknown) {
+      setError(errorMessage(err))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const activateVersion = async (selected: PaymentPolicy) => {
+    setSaving(true)
+    setError(null)
+    setNotice(null)
+    try {
+      await api.activatePolicy(selected.id)
+      await refresh()
+      setNotice(`La versión v${selected.version} está activa.`)
+    } catch (err: unknown) {
+      setError(errorMessage(err))
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) return <div className="center-panel"><Loader2 size={32} className="spin" aria-label="Cargando reglas y políticas" /></div>
+  if (!policy) return <div className="page"><div className="alert alert-error" role="alert" aria-live="assertive">{error ?? 'No se pudo cargar la política.'}</div></div>
 
   return (
-    <div className="page">
-      <div className="card" style={{ maxWidth: '700px' }}>
-        <h3 style={{ fontSize: '0.95rem', marginBottom: '0.75rem', color: 'var(--color-text-muted)' }}>Política activa v{policy?.version}</h3>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(220px,1fr))', gap: '1rem' }}>
-          <div>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Moneda base</div>
-            <div>{policy?.currency}</div>
-          </div>
-          <div>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Máximo por factura</div>
-            <div>{policy?.max_invoice_amount != null ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: policy.currency }).format(policy.max_invoice_amount) : '—'}</div>
-          </div>
-          <div>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Umbral aprobación humana</div>
-            <div>{policy?.approval_threshold != null ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: policy.currency }).format(policy.approval_threshold) : '—'}</div>
-          </div>
-          <div>
-            <div style={{ color: 'var(--color-text-muted)', fontSize: '0.8rem' }}>Presupuesto periodo</div>
-            <div>{policy?.period_budget != null ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: policy.currency }).format(policy.period_budget) : '—'}</div>
-          </div>
+    <div className="page rules-page">
+      <div className="rules-page-heading">
+        <div className="alert alert-info rules-intro">
+          <ShieldCheck size={18} aria-hidden="true" />
+          <span><strong>Política activa v{policy.version}.</strong> Las decisiones anteriores conservan la versión con la que fueron evaluadas.</span>
         </div>
-
-        <h3 style={{ fontSize: '0.95rem', marginTop: '1.5rem', marginBottom: '0.5rem', color: 'var(--color-text-muted)' }}>Acciones por motivo</h3>
-        <table style={{ width: '100%', marginTop: '0.5rem' }}>
-          <thead>
-            <tr><th style={{ textAlign: 'left' }}>Código</th><th style={{ textAlign: 'left' }}>Acción</th></tr>
-          </thead>
-          <tbody>
-            {(policy?.rule_actions || []).map((ra: any) => (
-              <tr key={ra.code} style={{ borderBottom: '1px solid var(--color-border)' }}>
-                <td style={{ padding: '0.5rem 0', fontSize: '0.85rem', fontFamily: 'monospace' }}>{ra.code}</td>
-                <td style={{ padding: '0.5rem 0', fontSize: '0.85rem' }}>{ra.action}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        {!draft && (
+          <button className="btn btn-primary" type="button" onClick={() => startDraft(policy)}>
+            <Plus size={17} /> Crear nueva versión
+          </button>
+        )}
       </div>
 
-      <div style={{ marginTop: '1.5rem', maxWidth: '700px', fontSize: '0.85rem', color: 'var(--color-text-muted)' }}>
-        <ShieldCheck size={16} /> Esta pantalla solo consulta la política. Los cambios de reglas se realizan mediante la API (PUT /api/v1/policy).
-      </div>
+      <section className="card rules-section rules-test-user">
+        <div className="form-group">
+          <label htmlFor="rules-test-user">Usuario de prueba</label>
+          <select id="rules-test-user" className="form-control" value={testUser} onChange={(event) => selectTestUser(event.target.value)}>
+            <option value="">Sin usuario seleccionado (solo lectura)</option>
+            <option value="demo_user">Usuario de prueba · demo_user</option>
+          </select>
+          <span className="field-hint">Selección local de demostración; no representa autenticación real.</span>
+        </div>
+        <p className="policy-version-state" role="status">{canEdit ? 'Edición habilitada para demo_user' : 'Modo lectura: no hay usuario de prueba seleccionado'}</p>
+      </section>
+
+      {notice && <div className="alert alert-success" role="status" aria-live="polite">{notice}</div>}
+      {error && !draft && <div className="alert alert-error" role="alert" aria-live="assertive">{error}</div>}
+
+      {draft && draftSource ? (
+        <PolicyEditor
+          key={`${draftSource.id}-${draft.version}`}
+          source={draftSource}
+          draft={draft}
+          catalog={catalog}
+          canEdit={canEdit}
+          saving={saving}
+          error={error}
+          onCancel={closeDraft}
+          onSave={saveDraft}
+        />
+      ) : (
+        <>
+          <PolicyParams policy={policy} />
+          <PolicyActionsMatrix catalog={catalog} actions={policy.rule_actions} editable={false} onChange={() => undefined} />
+        </>
+      )}
+
+      <PolicyVersionsTable
+        policies={versions}
+        canEdit={canEdit}
+        busy={saving}
+        onActivate={activateVersion}
+        onDuplicate={startDraft}
+      />
     </div>
   )
 }

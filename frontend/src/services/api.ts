@@ -1,4 +1,4 @@
-import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome, BudgetUpdate } from '../types/index'
+import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome, BudgetUpdate, RuleCatalogItem, PolicyMutation, ApiValidationIssue } from '../types/index'
 
 const API_BASE = '/api/v1'
 
@@ -13,16 +13,41 @@ export class ApiError extends Error {
   }
 }
 
+function formatApiDetail(detail: unknown): string {
+  if (typeof detail === 'string') return detail
+  if (Array.isArray(detail)) {
+    const messages = detail.map((issue: ApiValidationIssue | string) => {
+      if (typeof issue === 'string') return issue
+      const location = issue.loc?.filter((part) => part !== 'body' && part !== 'query' && part !== 'path').join('.')
+      return [location, issue.msg].filter(Boolean).join(': ')
+    }).filter(Boolean)
+    return messages.length ? messages.join(' · ') : 'Los datos enviados no son válidos.'
+  }
+  if (detail && typeof detail === 'object') return JSON.stringify(detail)
+  return ''
+}
+
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
-  })
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      headers: { 'Content-Type': 'application/json', ...options.headers },
+      ...options,
+    })
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new ApiError(
+        0,
+        `No se pudo conectar con la API en ${API_BASE}${path}. Comprueba que el backend esté activo y que el proxy /api esté disponible desde la dirección de la aplicación.`,
+      )
+    }
+    throw error
+  }
   if (!res.ok) {
     let detail = res.statusText
     try {
       const body = await res.json()
-      detail = (body as { detail?: string }).detail || detail
+      detail = formatApiDetail((body as { detail?: unknown }).detail) || detail
     } catch {
       // ignorar si no es JSON
     }
@@ -35,8 +60,10 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 export const api = {
   health: () => request<{ status: string }>('/health'),
 
-  getPolicy: () => request<PaymentPolicy>('/policy'),
-  createPolicy: (body: PaymentPolicy) => request<PaymentPolicy>('/policy', {
+  getPolicy: () => request<PaymentPolicy>('/policy/'),
+  getPolicyCatalog: () => request<RuleCatalogItem[]>('/policy/catalog'),
+  listPolicyVersions: () => request<PaymentPolicy[]>('/policy/versions'),
+  createPolicy: (body: PolicyMutation) => request<PaymentPolicy>('/policy/', {
     method: 'PUT',
     body: JSON.stringify(body),
   }),

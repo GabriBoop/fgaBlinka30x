@@ -5,9 +5,21 @@ from app.database import get_db
 from app.models.policy import PaymentPolicy
 from app.models.rule_action import RuleAction
 from app.models.company import CompanyDemo
+from app.models.policy_change_reason import PolicyChangeReason
 from app.schemas.policy import BudgetUpdate, PaymentPolicyOut, PolicyCreate, PolicyActivate
+from app.rules.catalog import RULE_CATALOG
 
 router = APIRouter()
+
+
+@router.get("/catalog", tags=["policy"])
+def get_policy_catalog():
+    return RULE_CATALOG
+
+
+@router.get("/versions", response_model=list[PaymentPolicyOut], tags=["policy"])
+def list_policy_versions(db: Session = Depends(get_db)):
+    return db.query(PaymentPolicy).order_by(PaymentPolicy.version.desc()).all()
 
 
 @router.get("/", response_model=PaymentPolicyOut, tags=["policy"])
@@ -24,11 +36,24 @@ def create_policy(payload: PolicyCreate, db: Session = Depends(get_db)):
     if not company:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
 
+    latest_policy = (
+        db.query(PaymentPolicy)
+        .filter(PaymentPolicy.company_id == payload.company_id)
+        .order_by(PaymentPolicy.version.desc())
+        .first()
+    )
+    expected_version = (latest_policy.version if latest_policy else 0) + 1
+    if payload.version != expected_version:
+        raise HTTPException(
+            status_code=422,
+            detail=f"La siguiente versión debe ser v{expected_version}",
+        )
+
     new_policy = PaymentPolicy(
-        id=f"pol_v{payload.version}",
+        id=f"pol_{payload.company_id}_v{payload.version}",
         company_id=payload.company_id,
         version=payload.version,
-        active=payload.active,
+        active=payload.activate,
         currency=payload.currency,
         max_invoice_amount=payload.max_invoice_amount,
         approval_threshold=payload.approval_threshold,
@@ -42,13 +67,14 @@ def create_policy(payload: PolicyCreate, db: Session = Depends(get_db)):
     )
     db.add(new_policy)
 
-    if payload.active:
+    if payload.activate:
         db.query(PaymentPolicy).filter(
             PaymentPolicy.company_id == payload.company_id,
             PaymentPolicy.id != new_policy.id,
         ).update({PaymentPolicy.active: False})
 
     db.flush()
+    db.add(PolicyChangeReason(policy_id=new_policy.id, reason=payload.change_reason))
     for ra in payload.rule_actions:
         db.add(RuleAction(code=ra.code, policy_id=new_policy.id, action=ra.action))
 

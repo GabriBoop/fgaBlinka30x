@@ -7,6 +7,7 @@ from app.models import invoice
 from app.models import decision_record
 from app.models import human_review
 from app.models import budget_reservation
+from app.models import policy_change_reason
 
 __all__ = [
     "company",
@@ -18,4 +19,5 @@ __all__ = [
     "decision_record",
     "human_review",
     "budget_reservation",
+    "policy_change_reason",
 ]

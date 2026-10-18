@@ -5,10 +5,10 @@ from app.database import Base
 
 
 class RuleAction(Base):
-    __tablename__ = "rule_action"
+    __tablename__ = "policy_rule_action"
 
     code: Mapped[str] = mapped_column(String, primary_key=True)
-    policy_id: Mapped[str] = mapped_column(ForeignKey("payment_policy.id"), nullable=False)
+    policy_id: Mapped[str] = mapped_column(ForeignKey("payment_policy.id"), primary_key=True)
     action: Mapped[str] = mapped_column(String, nullable=False)
 
     policy = relationship("PaymentPolicy", back_populates="rule_actions")

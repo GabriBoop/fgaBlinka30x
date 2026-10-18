@@ -81,8 +81,10 @@ export interface BeneficiaryCreate {
 
 export interface PolicyRuleAction {
   code: string
-  action: string
+  action: RuleActionName
 }
+
+export type RuleActionName = 'BLOCKED' | 'NEEDS_HUMAN_APPROVAL'
 
 export interface PaymentPolicy {
   id: string
@@ -101,6 +103,50 @@ export interface PaymentPolicy {
   possible_duplicate_date_window_days: number
   created_at: string | null
   rule_actions: PolicyRuleAction[]
+}
+
+export interface RuleCatalogItem {
+  code: string
+  rule: string
+  label: string
+  description: string
+  allowed_actions: RuleActionName[]
+  default_action: RuleActionName
+}
+
+export interface PolicyMutation {
+  company_id: string
+  version: number
+  currency: string
+  max_invoice_amount: number
+  approval_threshold: number
+  period_budget: number
+  period_type: string
+  period_basis: string
+  amount_tolerance_pct: number
+  min_extraction_confidence: number
+  name_similarity_threshold: number
+  possible_duplicate_date_window_days: number
+  rule_actions: PolicyRuleAction[]
+  change_reason: string
+  activate: boolean
+}
+
+export interface PolicyDraft {
+  version: number
+  currency: string
+  max_invoice_amount: string
+  approval_threshold: string
+  period_budget: string
+  period_type: string
+  period_basis: string
+  amount_tolerance_pct: string
+  min_extraction_confidence: string
+  name_similarity_threshold: string
+  possible_duplicate_date_window_days: string
+  rule_actions: PolicyRuleAction[]
+  change_reason: string
+  activate: boolean
 }
 
 export interface DecisionRecord {
@@ -128,6 +174,8 @@ export interface BudgetUpdate {
   period_budget: number
 }
 
-export interface ApiError {
-  detail: string
+export interface ApiValidationIssue {
+  loc?: Array<string | number>
+  msg?: string
+  type?: string
 }

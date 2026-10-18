@@ -4,8 +4,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
 import app.models  # registra todos los modelos en Base.metadata
 from app.api.v1.router import api_router
+from app.services.policy_migration import migrate_legacy_rule_actions
 
 Base.metadata.create_all(bind=engine)
+migrate_legacy_rule_actions()
 
 app = FastAPI(
     title="Agente Inteligente de Gestión de Facturas",

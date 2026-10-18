@@ -37,45 +37,86 @@ def test_create_duplicate_beneficiary_fails(client):
     assert response.status_code == 400
 
 
-def test_create_policy(client):
-    from sqlalchemy.orm import sessionmaker
-    from conftest import engine as _engine
+def test_create_policy(client, db_session):
     from app.models.company import CompanyDemo
+    from app.models.policy_change_reason import PolicyChangeReason
+    from app.rules.catalog import RULE_CATALOG
 
-    _S = sessionmaker(bind=_engine)
-    _db = _S()
-    if not _db.query(CompanyDemo).filter(CompanyDemo.id == "co_demo_001").first():
-        _db.add(CompanyDemo(id="co_demo_001", name="Co Demo", currency_base="USD"))
-        _db.commit()
-    _db.close()
+    db_session.add(CompanyDemo(id="co_demo_001", name="Co Demo", currency_base="USD"))
+    db_session.commit()
 
     payload = {
-        "id": "pol_test_01",
         "company_id": "co_demo_001",
         "version": 1,
-        "active": True,
+        "activate": True,
+        "change_reason": "Versión inicial para pruebas",
         "currency": "USD",
         "max_invoice_amount": "5000.00",
         "approval_threshold": "1000.00",
         "period_budget": "12000.00",
         "period_type": "monthly",
         "period_basis": "issue_date",
-        "rule_actions": [
-            {"code": "DUPLICATE_CONFIRMED", "action": "BLOCKED"},
-            {"code": "ALL_CHECKS_PASSED", "action": "ELIGIBLE_SIMULATED"},
-        ],
+        "rule_actions": [{"code": item["code"], "action": item["default_action"]} for item in RULE_CATALOG],
     }
     response = client.put("/api/v1/policy", json=payload)
     assert response.status_code == 200
     data = response.json()
-    assert data["id"].startswith("pol_v")
+    assert data["id"] == "pol_co_demo_001_v1"
     assert data["version"] == 1
     assert data["active"] is True
     policy_id = data["id"]
 
+    response = client.post("/api/v1/policy/activate", json={"policy_id": policy_id})
+    assert response.status_code == 200
+    assert response.json() == {"policy_id": policy_id, "active": True}
+
     response = client.get("/api/v1/policy")
     assert response.status_code == 200
     assert response.json()["id"] == policy_id
+
+    second_payload = {**payload, "version": 2, "activate": False, "change_reason": "Ajuste de política"}
+    response = client.put("/api/v1/policy", json=second_payload)
+    assert response.status_code == 200
+    second_policy_id = response.json()["id"]
+    assert response.json()["active"] is False
+    assert client.get("/api/v1/policy").json()["id"] == policy_id
+
+    response = client.post("/api/v1/policy/activate", json={"policy_id": second_policy_id})
+    assert response.status_code == 200
+    assert client.get("/api/v1/policy").json()["id"] == second_policy_id
+
+    response = client.get("/api/v1/policy/versions")
+    assert response.status_code == 200
+    assert [version["version"] for version in response.json()] == [2, 1]
+    reasons = {
+        entry.policy_id: entry.reason
+        for entry in db_session.query(PolicyChangeReason).all()
+    }
+    assert reasons == {
+        policy_id: "Versión inicial para pruebas",
+        second_policy_id: "Ajuste de política",
+    }
+
+
+def test_policy_contract_rejects_blank_change_reason(client):
+    from app.rules.catalog import RULE_CATALOG
+
+    payload = {
+        "company_id": "co_demo_001",
+        "version": 1,
+        "currency": "USD",
+        "max_invoice_amount": 5000,
+        "approval_threshold": 1000,
+        "period_budget": 12000,
+        "period_type": "monthly",
+        "period_basis": "issue_date",
+        "rule_actions": [{"code": item["code"], "action": item["default_action"]} for item in RULE_CATALOG],
+        "change_reason": "   ",
+        "activate": True,
+    }
+    response = client.put("/api/v1/policy", json=payload)
+    assert response.status_code == 422
+    assert any("change_reason" in ".".join(map(str, issue["loc"])) for issue in response.json()["detail"])
 
 
 def test_create_and_list_invoice(client):
