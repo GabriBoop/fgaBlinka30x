@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { api } from '../services/api'
 import { formatCurrency, formatDate, outcomeLabel, outcomeClass, reasonChipClass } from '../lib/utils'
-import { Loader2, RefreshCw, Edit2 } from 'lucide-react'
+import { Loader2, Edit2 } from 'lucide-react'
 
 export default function InvoiceDetail() {
   const { id } = useParams()
@@ -24,17 +24,6 @@ export default function InvoiceDetail() {
     })
   }, [id])
 
-  const handleEvaluate = async () => {
-    if (!id) return
-    try {
-      const res = await api.evaluateInvoice(id)
-      setInvoice((prev: any) => ({ ...prev, status: res.outcome }))
-      setDecisions((prev: any[]) => [res, ...prev])
-    } catch (e: any) {
-      setError(e.detail || 'Error evaluando factura')
-    }
-  }
-
   if (loading) return <div className="center-panel"><Loader2 size={32} /></div>
   if (error) return <div className="center-panel"><div className="alert alert-error">{error}</div></div>
   if (!invoice) return <div className="center-panel">Factura no encontrada</div>
@@ -45,9 +34,6 @@ export default function InvoiceDetail() {
         <Link to="/invoices" className="btn btn-sm btn-outline">← Volver</Link>
         <h1>Factura #{invoice.invoice_number || invoice.id}</h1>
         <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button className="btn btn-outline btn-sm" onClick={handleEvaluate} disabled={invoice.status !== 'PENDING'}>
-            <RefreshCw size={16} /> Evaluar
-          </button>
           <button className="btn btn-primary btn-sm" onClick={() => navigate(`/invoices/${id}/edit`)}>
             <Edit2 size={16} /> Editar campos
           </button>
