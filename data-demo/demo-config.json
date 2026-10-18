@@ -2,7 +2,7 @@
   "_nota": "Datos 100% ficticios. Importes como texto decimal (en la base de datos serán NUMERIC).",
   "company": {
     "id": "co_demo_001",
-    "name": "Orquídea Andina S.A.S. (empresa ficticia)",
+    "name": "TrustFlow Tool",
     "currency_base": "USD"
   },
   "policy": {

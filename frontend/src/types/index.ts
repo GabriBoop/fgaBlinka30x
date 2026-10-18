@@ -10,6 +10,18 @@ export type InvoiceOutcome =
   | 'REJECTED'
 
 export type InvoiceSource = 'pdf' | 'image' | 'manual' | 'email_text' | 'history'
+export type InvoiceFieldSource = 'pdf' | 'image' | 'ocr' | 'manual'
+
+export interface InvoiceExtractedFields {
+  beneficiary_name?: string | null
+  invoice_number?: string | null
+  amount?: string | null
+  currency?: string | null
+  issue_date?: string | null
+  due_date?: string | null
+  description?: string | null
+  _field_sources?: Record<string, InvoiceFieldSource>
+}
 
 export interface Invoice {
   id: string
@@ -27,7 +39,7 @@ export interface Invoice {
   file_path: string | null
   extraction_confidence: number | null
   raw_text: string | null
-  extracted: any
+  extracted: InvoiceExtractedFields | null
   status: InvoiceOutcome
   created_at: string | null
 }
@@ -47,11 +59,13 @@ export interface InvoiceCreate {
   file_hash?: string | null
   extraction_confidence?: number | null
   raw_text?: string | null
+  extracted?: InvoiceExtractedFields | null
 }
 
 export interface InvoiceUpdate {
   standardize_number?: boolean
   beneficiary_id?: string | null
+  beneficiary_name?: string | null
   invoice_number?: string | null
   amount?: number | null
   currency?: string | null

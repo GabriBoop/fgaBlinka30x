@@ -12,6 +12,7 @@ from typing import Optional
 
 from pypdf import PdfReader
 
+from app.services.field_parser import parse_invoice_text
 from app.services.ocr import image_to_text, pdf_pages_to_text
 
 # Detección de tipo por extensión (sin dependencias de libmagic en el sistema).
@@ -55,7 +56,8 @@ class ExtractionResult:
     extraction_confidence: Optional[float]
     ocr_available: bool
     ocr_warning: Optional[str] = None
-    fields: dict = field(default_factory=dict)
+    ocr_used: bool = False
+    fields: dict[str, object | None] = field(default_factory=dict)
 
 
 def _compute_hash(content: bytes) -> str:
@@ -101,27 +103,35 @@ def extract_file(file_content: bytes, file_name: str) -> ExtractionResult:
     ocr_available = False
     ocr_warning = None
     confidence = None
+    ocr_confidence = None
+    ocr_used = False
 
     if source_type == "pdf":
         try:
             raw_text = _extract_pdf_text(stored_path)
         except Exception:
             raw_text = ""
-        if raw_text.strip():
-            confidence = 0.95  # PDF con texto embebido: alta confianza
-        else:
+        if not raw_text.strip():
             # PDF posiblemente escaneado: intentar OCR
             ocr_res = pdf_pages_to_text(stored_path)
             ocr_available = ocr_res.available
             ocr_warning = ocr_res.warning
             raw_text = ocr_res.text
-            confidence = 0.70 if ocr_available else None
+            ocr_confidence = ocr_res.confidence
+            ocr_used = ocr_res.available
     else:
         ocr_res = image_to_text(stored_path)
         ocr_available = ocr_res.available
         ocr_warning = ocr_res.warning
         raw_text = ocr_res.text
-        confidence = 0.85 if ocr_available else None
+        ocr_confidence = ocr_res.confidence
+        ocr_used = ocr_res.available
+
+    parsed = parse_invoice_text(raw_text, source_type)
+    if source_type == "pdf" and not ocr_used:
+        confidence = parsed.confidence if raw_text.strip() else None
+    elif ocr_used and ocr_confidence is not None:
+        confidence = min(parsed.confidence, ocr_confidence)
 
     return ExtractionResult(
         file_id=file_hash,
@@ -135,6 +145,8 @@ def extract_file(file_content: bytes, file_name: str) -> ExtractionResult:
         extraction_confidence=confidence,
         ocr_available=ocr_available,
         ocr_warning=ocr_warning,
+        ocr_used=ocr_used,
+        fields=parsed.fields,
     )
 
 

@@ -1,4 +1,6 @@
 import uuid
+from datetime import date
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel, Field
@@ -7,6 +9,8 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models.invoice import Invoice
 from app.models.human_review import HumanReview
+from app.models.beneficiary import Beneficiary
+from app.rules.normalization import norm_name
 from app.schemas.invoice import InvoiceOut, InvoiceCreate, InvoiceUpdate
 from app.services.invoice_numbering import next_invoice_number
 
@@ -62,8 +66,62 @@ def update_invoice(invoice_id: str, payload: InvoiceUpdate, db: Session = Depend
     if not invoice:
         raise HTTPException(status_code=404, detail="Factura no encontrada")
     previous_invoice_number = invoice.invoice_number
-    for field, value in payload.model_dump(exclude_unset=True, exclude={"standardize_number"}).items():
+    update_values = payload.model_dump(
+        exclude_unset=True,
+        exclude={"standardize_number", "beneficiary_name"},
+    )
+    extracted = dict(invoice.extracted or {})
+    field_sources_value = extracted.get("_field_sources")
+    field_sources = dict(field_sources_value) if isinstance(field_sources_value, dict) else {}
+    corrected_fields = {
+        "invoice_number",
+        "amount",
+        "currency",
+        "issue_date",
+        "due_date",
+        "description",
+    }
+    for field, value in update_values.items():
         setattr(invoice, field, value)
+
+        if field == "beneficiary_id":
+            beneficiary = (
+                db.query(Beneficiary)
+                .filter(
+                    Beneficiary.id == value,
+                    Beneficiary.company_id == invoice.company_id,
+                )
+                .first()
+            ) if value else None
+            if value and not beneficiary:
+                raise HTTPException(status_code=422, detail="El beneficiario no pertenece a la empresa")
+            extracted["beneficiary_name"] = beneficiary.name if beneficiary else None
+            field_sources["beneficiary_name"] = "manual"
+            corrected_fields.add("beneficiary_name")
+        elif field in corrected_fields:
+            if isinstance(value, (date, Decimal)):
+                extracted[field] = value.isoformat() if isinstance(value, date) else str(value)
+            else:
+                extracted[field] = value
+            field_sources[field] = "manual"
+
+    if "beneficiary_name" in payload.model_fields_set:
+        beneficiary_name = payload.beneficiary_name
+        beneficiary = None
+        if beneficiary_name:
+            beneficiary = (
+                db.query(Beneficiary)
+                .filter(
+                    Beneficiary.company_id == invoice.company_id,
+                    Beneficiary.normalized_name == norm_name(beneficiary_name),
+                )
+                .first()
+            )
+        invoice.beneficiary_id = beneficiary.id if beneficiary else None
+        extracted["beneficiary_name"] = beneficiary_name
+        field_sources["beneficiary_name"] = "manual"
+        corrected_fields.add("beneficiary_name")
+
     if payload.standardize_number:
         try:
             invoice.invoice_number = next_invoice_number(
@@ -71,6 +129,15 @@ def update_invoice(invoice_id: str, payload: InvoiceUpdate, db: Session = Depend
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc))
+        extracted["invoice_number"] = invoice.invoice_number
+        field_sources["invoice_number"] = "manual"
+        corrected_fields.add("invoice_number")
+
+    if corrected_fields.intersection(update_values) or "beneficiary_name" in payload.model_fields_set or payload.standardize_number:
+        extracted["_field_sources"] = field_sources
+        invoice.extracted = extracted
+        invoice.status = "PENDING"
+
     db.commit()
     db.refresh(invoice)
     return invoice

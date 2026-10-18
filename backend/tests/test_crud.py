@@ -153,3 +153,56 @@ def test_create_and_list_invoice(client):
     response = client.get("/api/v1/invoices?beneficiary_id=ben_test_01")
     assert response.status_code == 200
     assert len(response.json()) == 1
+
+
+def test_patch_invoice_corrections_sync_extracted_fields_and_reset_status(client, db_session):
+    from app.models.beneficiary import Beneficiary
+    from app.models.company import CompanyDemo
+    from app.models.invoice import Invoice
+
+    db_session.add(CompanyDemo(id="co_patch_01", name="Co Patch", currency_base="USD"))
+    db_session.add(
+        Beneficiary(
+            id="ben_patch_01",
+            company_id="co_patch_01",
+            name="Mantenimiento Pacífico S.A.S.",
+            normalized_name="mantenimiento pacifico sas",
+            allowed=True,
+        )
+    )
+    db_session.add(
+        Invoice(
+            id="inv_patch_01",
+            company_id="co_patch_01",
+            source_type="pdf",
+            status="BLOCKED",
+            extracted={"invoice_number": None, "_field_sources": {"amount": "pdf"}},
+        )
+    )
+    db_session.commit()
+
+    response = client.patch(
+        "/api/v1/invoices/inv_patch_01",
+        json={
+            "beneficiary_name": "Mantenimiento Pacífico S.A.S.",
+            "invoice_number": "MAN-204",
+            "amount": "750.00",
+            "currency": "USD",
+            "issue_date": "2026-10-18",
+            "due_date": "2026-11-18",
+            "description": "Servicio de mantenimiento",
+        },
+    )
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["status"] == "PENDING"
+    assert body["beneficiary_id"] == "ben_patch_01"
+    assert body["extracted"]["beneficiary_name"] == "Mantenimiento Pacífico S.A.S."
+    assert body["extracted"]["invoice_number"] == "MAN-204"
+    assert body["extracted"]["amount"] == "750.00"
+    assert body["extracted"]["issue_date"] == "2026-10-18"
+    assert body["extracted"]["due_date"] == "2026-11-18"
+    assert body["extracted"]["description"] == "Servicio de mantenimiento"
+    assert body["extracted"]["_field_sources"]["invoice_number"] == "manual"
+    assert body["extracted"]["_field_sources"]["amount"] == "manual"

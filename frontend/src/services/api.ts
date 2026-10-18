@@ -1,6 +1,7 @@
 import { Invoice, InvoiceCreate, InvoiceUpdate, Beneficiary, BeneficiaryCreate, PaymentPolicy, DecisionRecord, DashboardSummary, InvoiceOutcome, BudgetUpdate, RuleCatalogItem, PolicyMutation, ApiValidationIssue } from '../types/index'
 
 const API_BASE = '/api/v1'
+const DEMO_COMPANY_ID = 'co_demo_001'
 
 export class ApiError extends Error {
   status: number
@@ -63,6 +64,30 @@ function createInvoiceId(): string {
   return `inv_${timestamp}_${randomPart}`
 }
 
+async function postInvoiceFile(form: FormData): Promise<Invoice> {
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE}/invoices/upload`, { method: 'POST', body: form })
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new ApiError(
+        0,
+        `No se pudo conectar con la API en ${API_BASE}/invoices/upload. Comprueba que el backend esté activo y que el proxy /api esté disponible desde la dirección de la aplicación.`,
+      )
+    }
+    throw error
+  }
+  if (!res.ok) {
+    let detail = res.statusText
+    try {
+      const body = await res.json()
+      detail = formatApiDetail((body as { detail?: unknown }).detail) || detail
+    } catch { /* ignore */ }
+    throw new ApiError(res.status, detail)
+  }
+  return res.json() as Promise<Invoice>
+}
+
 export const api = {
   health: () => request<{ status: string }>('/health'),
 
@@ -100,7 +125,7 @@ export const api = {
   },
   createInvoice: (body: InvoiceCreate) => request<Invoice>('/invoices', {
     method: 'POST',
-    body: JSON.stringify(body),
+    body: JSON.stringify({ ...body, id: body.id ?? createInvoiceId() }),
   }),
   getInvoice: (id: string) => request<Invoice>(`/invoices/${id}`),
   updateInvoice: (id: string, body: InvoiceUpdate) => request<Invoice>(`/invoices/${id}`, {
@@ -108,11 +133,19 @@ export const api = {
     body: JSON.stringify(body),
   }),
 
+  uploadInvoiceFile: (file: File): Promise<Invoice> => {
+    const form = new FormData()
+    form.append('file', file)
+    form.append('company_id', DEMO_COMPANY_ID)
+    return postInvoiceFile(form)
+  },
+
   uploadInvoice: async (
     file: File | null,
     details: {
       beneficiaryId: string
       companyId: string
+      invoiceNumber?: string
       amount: number
       currency: string
       issueDate: string
@@ -132,6 +165,7 @@ export const api = {
       return api.createInvoice({
         id: createInvoiceId(),
         company_id: details.companyId,
+        invoice_number: details.invoiceNumber ?? null,
         ...invoiceDetails,
         source_type: 'manual',
       })
@@ -140,21 +174,13 @@ export const api = {
     const form = new FormData()
     form.append('file', file)
     form.append('beneficiary_id', details.beneficiaryId)
+    if (details.invoiceNumber) form.append('invoice_number', details.invoiceNumber)
     form.append('amount', String(details.amount))
     form.append('currency', details.currency)
     form.append('issue_date', details.issueDate)
     form.append('due_date', details.dueDate)
     if (details.description) form.append('description', details.description)
-    const res = await fetch(`${API_BASE}/invoices/upload`, { method: 'POST', body: form })
-    if (!res.ok) {
-      let detail = res.statusText
-      try {
-        const body = await res.json()
-        detail = formatApiDetail((body as { detail?: unknown }).detail) || detail
-      } catch { /* ignore */ }
-      throw new ApiError(res.status, detail)
-    }
-    return res.json() as Promise<Invoice>
+    return postInvoiceFile(form)
   },
   reextractInvoice: (id: string) => request<{ invoice_id: string; raw_text: string; extraction_confidence: number | null }>(`/invoices/${id}/extract`, {
     method: 'POST',

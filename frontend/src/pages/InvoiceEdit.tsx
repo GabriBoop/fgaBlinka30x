@@ -210,7 +210,14 @@ export default function InvoiceEdit() {
       setInvoice(saved)
       setValues((current) => ({ ...current, invoice_number: saved.invoice_number || '' }))
       setAutoNumber(isStandardInvoiceNumber(saved.invoice_number))
-      setNotice('Los cambios de la factura se guardaron correctamente.')
+      try {
+        const evaluation = await api.evaluateInvoice(id)
+        setInvoice((current) => current ? { ...current, status: evaluation.outcome } : current)
+        setNotice(`Cambios guardados y factura evaluada: ${outcomeLabel(evaluation.outcome)}.`)
+      } catch (evaluationError: unknown) {
+        const detail = evaluationError instanceof Error ? evaluationError.message : 'Error desconocido'
+        setError(`Los cambios se guardaron, pero no se pudo evaluar la factura: ${detail}`)
+      }
     } catch (e: any) {
       setError(e.detail || e.message || 'No se pudieron guardar los cambios.')
     } finally {
