@@ -6,6 +6,7 @@ export type InvoiceOutcome =
   | 'BLOCKED'
   | 'PENDING'
   | 'APPROVED'
+  | 'HUMAN_APPROVED'
   | 'REJECTED'
 
 export type InvoiceSource = 'pdf' | 'image' | 'manual' | 'email_text' | 'history'

@@ -57,6 +57,12 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   return res.json()
 }
 
+function createInvoiceId(): string {
+  const timestamp = Date.now().toString(36)
+  const randomPart = Math.random().toString(36).slice(2, 14).padEnd(12, '0')
+  return `inv_${timestamp}_${randomPart}`
+}
+
 export const api = {
   health: () => request<{ status: string }>('/health'),
 
@@ -102,20 +108,53 @@ export const api = {
     body: JSON.stringify(body),
   }),
 
-  uploadInvoice: async (file: File, beneficiaryId: string): Promise<Invoice> => {
+  uploadInvoice: async (
+    file: File | null,
+    details: {
+      beneficiaryId: string
+      companyId: string
+      amount: number
+      currency: string
+      issueDate: string
+      dueDate: string
+      description?: string
+    },
+  ): Promise<Invoice> => {
+    const invoiceDetails = {
+      beneficiary_id: details.beneficiaryId,
+      amount: details.amount,
+      currency: details.currency,
+      issue_date: details.issueDate,
+      due_date: details.dueDate,
+      description: details.description,
+    }
+    if (!file) {
+      return api.createInvoice({
+        id: createInvoiceId(),
+        company_id: details.companyId,
+        ...invoiceDetails,
+        source_type: 'manual',
+      })
+    }
+
     const form = new FormData()
     form.append('file', file)
-    form.append('beneficiary_id', beneficiaryId)
+    form.append('beneficiary_id', details.beneficiaryId)
+    form.append('amount', String(details.amount))
+    form.append('currency', details.currency)
+    form.append('issue_date', details.issueDate)
+    form.append('due_date', details.dueDate)
+    if (details.description) form.append('description', details.description)
     const res = await fetch(`${API_BASE}/invoices/upload`, { method: 'POST', body: form })
     if (!res.ok) {
       let detail = res.statusText
       try {
         const body = await res.json()
-        detail = (body as { detail?: string }).detail || detail
+        detail = formatApiDetail((body as { detail?: unknown }).detail) || detail
       } catch { /* ignore */ }
       throw new ApiError(res.status, detail)
     }
-    return res.json()
+    return res.json() as Promise<Invoice>
   },
   reextractInvoice: (id: string) => request<{ invoice_id: string; raw_text: string; extraction_confidence: number | null }>(`/invoices/${id}/extract`, {
     method: 'POST',

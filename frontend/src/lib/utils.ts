@@ -28,6 +28,7 @@ export function outcomeLabel(outcome: string): string {
     case 'NEEDS_HUMAN_APPROVAL': return 'Requiere aprobación'
     case 'PENDING': return 'Pendiente'
     case 'APPROVED': return 'Aprobada por revisión humana'
+    case 'HUMAN_APPROVED': return 'Aprobada por revisión humana'
     case 'REJECTED': return 'Rechazada por revisión humana'
     default: return outcome
   }
@@ -40,6 +41,7 @@ export function outcomeClass(outcome: string): string {
     case 'NEEDS_HUMAN_APPROVAL': return 'badge-approval'
     case 'PENDING': return 'badge-pending'
     case 'APPROVED': return 'badge-eligible'
+    case 'HUMAN_APPROVED': return 'badge-eligible'
     case 'REJECTED': return 'badge-blocked'
     default: return 'badge-pending'
   }
