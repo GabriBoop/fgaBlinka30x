@@ -136,9 +136,7 @@ python -m app.services.seed
 uvicorn app.main:app --reload
 ```
 
-### Frontend (Fase 5)
-
-El frontend se sirve en `http://localhost:5173` y hace proxy de `/api` al backend en `http://localhost:8000`. `npm run dev` solo inicia Vite; no inicia FastAPI ni PostgreSQL. Si el backend no está levantado, la interfaz puede abrir, pero las pantallas que consultan datos mostrarán errores o contenido vacío.
+### Aplicación completa (incluido acceso desde otros dispositivos)
 
 La forma recomendada de iniciar todo es ejecutar desde la raíz del repositorio:
 
@@ -146,15 +144,23 @@ La forma recomendada de iniciar todo es ejecutar desde la raíz del repositorio:
 docker compose up -d --build
 ```
 
-Este comando aplica las migraciones pendientes, conserva las tablas de una base de datos de una versión anterior, inicia FastAPI y carga los datos ficticios. Verifica que la API esté lista en `http://localhost:8000/health` (debe responder `{"status":"ok"}`) y abre la documentación en `http://localhost:8000/docs`. Después, en otra terminal:
+Compose inicia PostgreSQL, aplica las migraciones, carga los datos ficticios e inicia la API y el frontend de producción. La interfaz y todas sus rutas API se sirven bajo el mismo origen: abre `http://localhost:8080`. El proxy interno del frontend reenvía `/api` a FastAPI, así que el navegador de cada dispositivo no depende de su propio `localhost` ni requiere configurar una dirección de API.
+
+Para entrar desde otro dispositivo conectado a la misma red, abre `http://<IP-DE-ESTE-PC>:8080` (en Windows, consulta la IP con `ipconfig`). Si Windows Firewall pregunta, permite el acceso en la red privada. Los datos permanecen en el volumen de PostgreSQL del equipo que ejecuta Docker; los demás dispositivos acceden a esa misma instancia. Comprueba el estado con `docker compose ps`; el backend debe aparecer saludable.
+
+La API sigue disponible para diagnóstico en `http://localhost:8000/health` (debe responder `{"status":"ok"}`) y su documentación en `http://localhost:8000/docs`.
+
+### Desarrollo del frontend
+
+Para desarrollar con recarga en caliente, inicia primero PostgreSQL y el backend con `docker compose up -d postgres backend`, y luego ejecuta:
 
 ```bash
 cd frontend
 npm install
-npm run dev        # desarrollo con recarga caliente; abrir http://localhost:5173
+npm run dev        # abrir http://localhost:5173
 ```
 
-En Windows PowerShell también se puede comprobar el estado con `docker compose ps`; deben aparecer los servicios `postgres` y `backend` activos. Si solo aparece `postgres`, el frontend no tendrá una API disponible. Los errores de conexión de base de datos ahora detienen el arranque de FastAPI y se muestran en la terminal del backend, en lugar de dejar un servicio iniciado pero incapaz de responder a las consultas.
+Vite escucha en la red local y su proxy `/api` reenvía las solicitudes al backend del mismo equipo. Para abrir esta instancia de desarrollo desde otro dispositivo, usa `http://<IP-DE-ESTE-PC>:5173`. Para uso normal entre dispositivos, prefiere el frontend de producción en el puerto 8080.
 
 Para detener los servicios Docker:
 
@@ -162,18 +168,11 @@ Para detener los servicios Docker:
 docker compose down
 ```
 
-Para iniciar solamente el frontend (por ejemplo, si el backend ya está ejecutándose por separado):
+Para iniciar solamente el frontend de desarrollo (por ejemplo, si el backend ya está ejecutándose por separado):
 
 ```bash
 cd frontend
 npm run dev
-```
-
-Para producción, desde `frontend`:
-
-```bash
-npm run build
-npm run preview
 ```
 
 ## Ejecutar pruebas
