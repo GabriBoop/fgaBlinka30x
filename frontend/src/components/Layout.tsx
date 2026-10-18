@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
-import { LayoutDashboard, FileText, Upload, ShieldCheck, Users, History, RotateCcw, Moon, Sun } from 'lucide-react'
+import { LayoutDashboard, FileText, Upload, ShieldCheck, Users, History, RotateCcw, Moon, Sun, PanelLeftClose, PanelLeftOpen } from 'lucide-react'
 
 const links = [
   { path: '/', label: 'Panel', icon: LayoutDashboard },
@@ -14,6 +14,7 @@ const links = [
 
 export default function Layout() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem('sidebar-collapsed') === 'true')
   const [darkMode, setDarkMode] = useState(() => localStorage.getItem('theme') === 'dark')
   const navigate = useNavigate()
 
@@ -23,10 +24,20 @@ export default function Layout() {
     localStorage.setItem('theme', theme)
   }, [darkMode])
 
+  const toggleSidebar = () => {
+    setSidebarCollapsed((collapsed) => {
+      localStorage.setItem('sidebar-collapsed', String(!collapsed))
+      return !collapsed
+    })
+  }
+
   return (
     <div className="layout">
-      <aside className="sidebar">
-        <div className="logo">TrustFlow</div>
+      <aside className={cn('sidebar', sidebarCollapsed && 'collapsed')}>
+        <div className="logo" aria-label="TrustFlow">
+          <span className="logo-full">TrustFlow</span>
+          <span className="logo-short" aria-hidden="true">TF</span>
+        </div>
         <nav className="nav">
           {links.map((l) => {
             const Icon = l.icon
@@ -40,13 +51,23 @@ export default function Layout() {
                   setSidebarOpen(false)
                 }}
                 className={cn(l.path === window.location.pathname ? 'active' : '')}
+                title={sidebarCollapsed ? l.label : undefined}
               >
                 <Icon size={18} />
-                {l.label}
+                <span className="nav-label">{l.label}</span>
               </a>
             )
           })}
         </nav>
+        <button
+          className="sidebar-toggle"
+          type="button"
+          onClick={toggleSidebar}
+          aria-label={sidebarCollapsed ? 'Expandir barra lateral' : 'Comprimir barra lateral'}
+          title={sidebarCollapsed ? 'Expandir barra lateral' : 'Comprimir barra lateral'}
+        >
+          {sidebarCollapsed ? <PanelLeftOpen size={18} /> : <><PanelLeftClose size={18} /><span>Comprimir</span></>}
+        </button>
       </aside>
       <div className="content">
         <header className="app-navbar">
